@@ -1,34 +1,63 @@
-import React from 'react'
-import { Route, Routes } from 'react-router-dom'
-import Start from './pages/Start'
-import Home from  './pages/Home'
-import UserLogin from './pages/UserLogin'
-import UserLogout from './pages/UserLogout'
-import UserSignup from './pages/UserSignup'
-import CaptainLogin from './pages/CaptainLogin'
-import CaptainSignup from './pages/CaptainSignup'
-import UserContext from './context/UserContext'
-import UserProtectWrapper from './pages/UserProtectWrapper'
-import CaptainContext from './context/CaptainContext'
-import CaptainProtectWrapper from './context/CaptainContext'
+import React from "react";
+import { Route, Routes } from "react-router-dom";
+import Start from "./pages/Start";
+import UserHome from "./pages/UserHome";
+import CaptainHome from "./pages/CaptainHome";
+import UserLogin from "./pages/UserLogin";
+import UserLogout from "./pages/UserLogout";
+import CaptainLogout from "./pages/CaptainLogout";
+import UserSignup from "./pages/UserSignup";
+import CaptainLogin from "./pages/CaptainLogin";
+import CaptainSignup from "./pages/CaptainSignup";
+import UserProtectWrapper from "./pages/UserProtectWrapper";
+import CaptainProtectWrapper from "./pages/CaptainProtectWrapper";
+
 const App = () => {
   return (
-    <div className='max-w-107.5 mx-auto'>
-      <CaptainContext>
-      <UserContext>
-        <Routes>
-          <Route path='/' element={<Start />} />
-          <Route path='/user-login' element={<UserLogin />} />
-          <Route path='/user-signup' element={<UserSignup />} />
-          <Route path='/captain-login' element={<CaptainLogin />} />
-          <Route path='/captain-signup' element={<CaptainSignup />} />
-          <Route path='/home' element={<UserProtectWrapper><Home /></UserProtectWrapper>}/>
-          <Route path='/user/logout' element={<UserProtectWrapper> <UserLogout /></UserProtectWrapper>}/>
-        </Routes>
-      </UserContext>
-        </CaptainContext>
+    <div className="max-w-107.5 mx-auto">
+      <Routes>
+        <Route path="/" element={<Start />} />
+        <Route path="/user-login" element={<UserLogin />} />
+        <Route path="/user-signup" element={<UserSignup />} />
+        <Route path="/captain-login" element={<CaptainLogin />} />
+        <Route path="/captain-signup" element={<CaptainSignup />} />
+        <Route
+          path="/user-home"
+          element={
+            <UserProtectWrapper>
+              <UserHome />
+            </UserProtectWrapper>
+          }
+        />
+        <Route
+          path="/captain-home"
+          element={
+            <CaptainProtectWrapper>
+              <CaptainHome />
+            </CaptainProtectWrapper>
+          }
+        />
+        <Route
+          path="/captain-logout"
+          element={
+            <CaptainProtectWrapper>
+              {" "}
+              <CaptainLogout />
+            </CaptainProtectWrapper>
+          }
+        />
+        <Route
+          path="/user-logout"
+          element={
+            <UserProtectWrapper>
+              {" "}
+              <UserLogout />
+            </UserProtectWrapper>
+          }
+        />
+      </Routes>
     </div>
-  )
-}
+  );
+};
 
-export default App
+export default App;
