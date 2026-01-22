@@ -8,10 +8,13 @@ import UserSignup from './pages/UserSignup'
 import CaptainLogin from './pages/CaptainLogin'
 import CaptainSignup from './pages/CaptainSignup'
 import UserContext from './context/UserContext'
-import UserProtectWrapper from './pages/userProtectWrapper'
+import UserProtectWrapper from './pages/UserProtectWrapper'
+import CaptainContext from './context/CaptainContext'
+import CaptainProtectWrapper from './context/CaptainContext'
 const App = () => {
   return (
     <div className='max-w-107.5 mx-auto'>
+      <CaptainContext>
       <UserContext>
         <Routes>
           <Route path='/' element={<Start />} />
@@ -23,6 +26,7 @@ const App = () => {
           <Route path='/user/logout' element={<UserProtectWrapper> <UserLogout /></UserProtectWrapper>}/>
         </Routes>
       </UserContext>
+        </CaptainContext>
     </div>
   )
 }
