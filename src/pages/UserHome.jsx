@@ -12,24 +12,31 @@ import { SocketContext } from "../context/SocketContext";
 import { useContext } from "react";
 import { UserDataContext } from "../context/UserContext";
 import { useNavigate } from "react-router-dom";
-import LiveTracking from "../components/LiveTracking";
+import LiveTracking from "../components/Livetracking";
 
 const Home = () => {
   const [pickup, setPickup] = useState("");
   const [destination, setDestination] = useState("");
   const [panelOpen, setPanelOpen] = useState(false);
-  const vehiclePanelRef = useRef(null);
-  const confirmRidePanelRef = useRef(null);
-  const vehicleFoundRef = useRef(null);
-  const waitingForDriverRef = useRef(null);
   const panelRef = useRef(null);
   const panelCloseRef = useRef(null);
+
+  const vehiclePanelRef = useRef(null);
   const [vehiclePanel, setVehiclePanel] = useState(false);
+
+  const confirmRidePanelRef = useRef(null);
   const [confirmRidePanel, setConfirmRidePanel] = useState(false);
+
+  const vehicleFoundRef = useRef(null);
   const [vehicleFound, setVehicleFound] = useState(false);
+
+  const waitingForDriverRef = useRef(null);
   const [waitingForDriver, setWaitingForDriver] = useState(false);
+
+
   const [pickupSuggestions, setPickupSuggestions] = useState([]);
   const [destinationSuggestions, setDestinationSuggestions] = useState([]);
+
   const [activeField, setActiveField] = useState(null);
   const [fare, setFare] = useState({});
   const [vehicleType, setVehicleType] = useState(null);
@@ -64,7 +71,7 @@ const Home = () => {
         {
           params: { input: e.target.value },
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
+            Authorization: `Bearer ${localStorage.getItem("userToken")}`,
           },
         },
       );
@@ -82,7 +89,7 @@ const Home = () => {
         {
           params: { input: e.target.value },
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
+            Authorization: `Bearer ${localStorage.getItem("userToken")}`,
           },
         },
       );
@@ -190,7 +197,7 @@ const Home = () => {
       {
         params: { pickup, destination },
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          Authorization: `Bearer ${localStorage.getItem("userToken")}`,
         },
       },
     );
@@ -208,7 +215,7 @@ const Home = () => {
       },
       {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          Authorization: `Bearer ${localStorage.getItem("userToken")}`,
         },
       },
     );
