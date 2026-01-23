@@ -247,7 +247,7 @@ const CaptainSignup = () => {
           </button>
         </form>
 
-        <p className="text-center text-[15px] font-medium mt-4">
+        <p className="text-center text-[15px] font-medium mt-3 mb-4">
           <span className="text-gray-700">Already have an account? </span>
           <Link to="/captain-login" className="text-blue-600 font-bold">
             Login here
@@ -256,10 +256,28 @@ const CaptainSignup = () => {
       </div>
 
       <div>
-        <p className="text-[10px] leading-tight text-gray-600">
+        <p className="text-[12px] leading-tight">
           This site is protected by reCAPTCHA and the{" "}
-          <span className="underline">Google Privacy Policy</span> and{" "}
-          <span className="underline">Terms of Service apply</span>.
+          <span className="underline text-blue-600">
+            <a
+              href="https://google.com"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Google Privacy Policy
+            </a>
+          </span>{" "}
+          and{" "}
+          <span className="underline text-blue-600">
+            <a
+              href="https://google.com"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Terms of Service apply
+            </a>
+          </span>
+          .
         </p>
       </div>
     </div>

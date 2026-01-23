@@ -50,7 +50,7 @@ const UserLogin = () => {
         const data = response.data
         setUser(data.user)
         localStorage.setItem('userToken', data.userToken)
-        navigate('/home')
+        navigate('/user-home')
       }
     } catch (err) {
       if (err.response && err.response.data.message) {
