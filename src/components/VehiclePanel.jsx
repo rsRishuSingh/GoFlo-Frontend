@@ -4,7 +4,7 @@ const VehiclePanel = (props) => {
   return (
     <div>
       <h5
-        className="p-1 text-center w-[93%] absolute top-0"
+        className="p-1 text-center absolute top-0"
         onClick={() => {
           props.setVehiclePanel(false);
         }}

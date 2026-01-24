@@ -8,7 +8,7 @@ import VehiclePanel from "../components/VehiclePanel";
 import ConfirmRide from "../components/ConfirmRide";
 import LookingForDriver from "../components/LookingForDriver";
 import WaitingForDriver from "../components/WaitingForDriver";
-import { SocketContext } from "../context/SocketContext";
+// import { SocketContext } from "../context/SocketContext";
 import { useContext } from "react";
 import { UserDataContext } from "../context/UserContext";
 import { useNavigate } from "react-router-dom";
@@ -44,24 +44,24 @@ const Home = () => {
 
   const navigate = useNavigate();
 
-  const { socket } = useContext(SocketContext);
-  const { user } = useContext(UserDataContext);
+  // const { socket } = useContext(SocketContext);
+  // const { user } = useContext(UserDataContext);
 
-  useEffect(() => {
-    socket.emit("join", { userType: "user", userId: user._id });
-  }, [user]);
+  // useEffect(() => {
+  //   socket.emit("join", { userType: "user", userId: user._id });
+  // }, [user]);
 
-  socket.on("ride-confirmed", (ride) => {
-    setVehicleFound(false);
-    setWaitingForDriver(true);
-    setRide(ride);
-  });
+  // socket.on("ride-confirmed", (ride) => {
+  //   setVehicleFound(false);
+  //   setWaitingForDriver(true);
+  //   setRide(ride);
+  // });
 
-  socket.on("ride-started", (ride) => {
-    console.log("ride");
-    setWaitingForDriver(false);
-    navigate("/riding", { state: { ride } }); // Updated navigate to include ride data
-  });
+  // socket.on("ride-started", (ride) => {
+  //   console.log("ride");
+  //   setWaitingForDriver(false);
+  //   navigate("/riding", { state: { ride } }); // Updated navigate to include ride data
+  // });
 
   const handlePickupChange = async (e) => {
     setPickup(e.target.value);
@@ -222,7 +222,7 @@ const Home = () => {
   }
 
   return (
-    <div className="h-screen relative overflow-hidden">
+    <div className="h-screen relative overflow-hidden w">
       <img
         className="w-16 absolute left-5 top-5"
         src="https://upload.wikimedia.org/wikipedia/commons/c/cc/Uber_logo_2018.png"
@@ -298,7 +298,7 @@ const Home = () => {
       </div>
       <div
         ref={vehiclePanelRef}
-        className="fixed w-full z-10 bottom-0 translate-y-full bg-white px-3 py-10 pt-12"
+        className="fixed max-w-107.5 mx-auto w-full z-10 bottom-0 translate-y-full bg-white px-3 py-10 pt-12"
       >
         <VehiclePanel
           selectVehicle={setVehicleType}
@@ -309,7 +309,7 @@ const Home = () => {
       </div>
       <div
         ref={confirmRidePanelRef}
-        className="fixed w-full z-10 bottom-0 translate-y-full bg-white px-3 py-6 pt-12"
+        className="fixed max-w-107.5 mx-auto w-full z-10 bottom-0 translate-y-full bg-white px-3 py-6 pt-12"
       >
         <ConfirmRide
           createRide={createRide}
@@ -323,7 +323,7 @@ const Home = () => {
       </div>
       <div
         ref={vehicleFoundRef}
-        className="fixed w-full z-10 bottom-0 translate-y-full bg-white px-3 py-6 pt-12"
+        className="fixed max-w-107.5 mx-auto w-full z-10 bottom-0 translate-y-full bg-white px-3 py-6 pt-12"
       >
         <LookingForDriver
           createRide={createRide}
@@ -336,7 +336,7 @@ const Home = () => {
       </div>
       <div
         ref={waitingForDriverRef}
-        className="fixed w-full  z-10 bottom-0  bg-white px-3 py-6 pt-12"
+        className="fixed max-w-107.5 mx-auto w-full  z-10 bottom-0  bg-white px-3 py-6 pt-12"
       >
         <WaitingForDriver
           ride={ride}
