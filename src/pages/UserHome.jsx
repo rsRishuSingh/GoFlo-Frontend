@@ -53,17 +53,17 @@ const UserHome = () => {
     console.log("User joined socket room:", user._id);
   }, [user]);
 
-  // socket.on("ride-confirmed", (ride) => {
-  //   setVehicleFound(false);
-  //   setWaitingForDriver(true);
-  //   setRide(ride);
-  // });
+  socket.on("ride-confirmed", (ride) => {
+    setVehicleFound(false);
+    setWaitingForDriver(true);
+    setRide(ride);
+  });
 
-  // socket.on("ride-started", (ride) => {
-  //   console.log("ride");
-  //   setWaitingForDriver(false);
-  //   navigate("/riding", { state: { ride } });
-  // });
+  socket.on("ride-started", (ride) => {
+    console.log("ride");
+    setWaitingForDriver(false);
+    navigate("/user-riding", { state: { ride } });
+  });
 
   const handlePickupChange = async (e) => {
     setPickup(e.target.value);
@@ -135,35 +135,112 @@ const UserHome = () => {
   );
 
   async function findTrip() {
-    setVehiclePanel(true);
-    setPanelOpen(false);
-    setConfirmRidePanel(false);
-    setVehicleFound(false);
-    setWaitingForDriver(false);
-
-    const response = await axios.get(
-      `${import.meta.env.VITE_BASE_URL}/rides/get-fare`,
-      {
-        params: { pickup, destination },
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("userToken")}`,
+    try {
+      // Get coordinates for pickup location
+      const pickupCoords = await axios.get(
+        `${import.meta.env.VITE_BASE_URL}/maps/get-coordinates`,
+        {
+          params: { address: pickup },
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("userToken")}`,
+          },
         },
-      },
-    );
+      );
 
-    setFare(response.data);
+      // Get coordinates for destination location
+      const destinationCoords = await axios.get(
+        `${import.meta.env.VITE_BASE_URL}/maps/get-coordinates`,
+        {
+          params: { address: destination },
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("userToken")}`,
+          },
+        },
+      );
+
+      // Create origin and destination objects
+      const originData = {
+        location_name: pickup,
+        latitude: pickupCoords.data.lat,
+        longitude: pickupCoords.data.lng,
+      };
+
+      const destinationData = {
+        location_name: destination,
+        latitude: destinationCoords.data.lat,
+        longitude: destinationCoords.data.lng,
+      };
+
+      // Get fare with structured data
+      const response = await axios.post(
+        `${import.meta.env.VITE_BASE_URL}/rides/get-fare`,
+        { origin: originData, destination: destinationData },
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("userToken")}`,
+          },
+        },
+      );
+
+      setFare(response.data);
+      setVehiclePanel(true);
+      setPanelOpen(false);
+    } catch (error) {
+      console.error("Error finding trip:", error);
+      alert("Error calculating fare. Please try again.");
+    }
   }
 
   async function createRide() {
-    await axios.post(
-      `${import.meta.env.VITE_BASE_URL}/rides/create`,
-      { pickup, destination, vehicleType },
-      {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("userToken")}`,
+    try {
+      // Get coordinates for pickup location
+      const pickupCoords = await axios.get(
+        `${import.meta.env.VITE_BASE_URL}/maps/get-coordinates`,
+        {
+          params: { address: pickup },
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("userToken")}`,
+          },
         },
-      },
-    );
+      );
+
+      // Get coordinates for destination location
+      const destinationCoords = await axios.get(
+        `${import.meta.env.VITE_BASE_URL}/maps/get-coordinates`,
+        {
+          params: { address: destination },
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("userToken")}`,
+          },
+        },
+      );
+
+      // Create origin and destination objects
+      const originData = {
+        location_name: pickup,
+        latitude: pickupCoords.data.lat,
+        longitude: pickupCoords.data.lng,
+      };
+
+      const destinationData = {
+        location_name: destination,
+        latitude: destinationCoords.data.lat,
+        longitude: destinationCoords.data.lng,
+      };
+
+      await axios.post(
+        `${import.meta.env.VITE_BASE_URL}/rides/create`,
+        { origin: originData, destination: destinationData, vehicleType },
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("userToken")}`,
+          },
+        },
+      );
+    } catch (error) {
+      console.error("Error creating ride:", error);
+      alert("Error creating ride. Please try again.");
+    }
   }
 
   return (

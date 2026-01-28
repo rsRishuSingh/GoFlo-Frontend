@@ -12,7 +12,7 @@ const Riding = () => {
   const navigate = useNavigate();
 
   socket.on("ride-ended", () => {
-    navigate("/home");
+    navigate("/user-home");
   });
 
   return (
