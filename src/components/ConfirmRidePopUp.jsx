@@ -9,37 +9,43 @@ const ConfirmRidePopUp = (props) => {
   const submitHander = async (e) => {
     e.preventDefault();
 
-   const response = await axios.post(
-     `${import.meta.env.VITE_BASE_URL}/rides/start-ride`,
-     {
-       rideId: props.ride._id,
-       otp: otp,
-     },
-     {
-       headers: {
-         Authorization: `Bearer ${localStorage.getItem("captainToken")}`,
-       },
-     },
-   );
-    if (response.status === 200) {
-      props.setConfirmRidePopupPanel(false);
-      props.setRidePopupPanel(false);
-      navigate("/captain-riding", { state: { ride: props.ride } });
+    try {
+      const response = await axios.post(
+        `${import.meta.env.VITE_BASE_URL}/rides/start-ride`,
+        {
+          rideId: props.ride._id,
+          otp: otp,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("captainToken")}`,
+          },
+        },
+      );
+
+      if (response.status === 200) {
+        props.setConfirmRidePopupPanel(false);
+        props.setRidePopupPanel(false);
+        navigate("/captain-riding", { state: { ride: props.ride } });
+      }
+    } catch (error) {
+      console.error("Error starting ride:", error);
+      alert("Invalid OTP or error starting ride.");
     }
   };
 
   return (
- <div className="h-full relative">
+    <div className="h-full relative">
       <h5
         className="p-1 text-center w-full cursor-pointer"
         onClick={() => {
-                    props.setRidePopupPanel(true);
-                    props.setConfirmRidePopupPanel(false);
+          props.setRidePopupPanel(true);
+          props.setConfirmRidePopupPanel(false);
         }}
       >
         <i className="text-3xl text-gray-300 ri-arrow-down-wide-line"></i>
       </h5>
-      
+
       <h3 className="text-2xl font-semibold mb-5">
         Confirm this ride to Start
       </h3>
@@ -51,7 +57,7 @@ const ConfirmRidePopUp = (props) => {
             alt="User Avatar"
           />
           <h2 className="text-lg font-medium capitalize">
-            {props.ride?.user.fullname.firstname}
+            {props.ride?.user?.fullname.firstname}
           </h2>
         </div>
         <h5 className="text-lg font-semibold">2.2 KM</h5>
@@ -62,18 +68,20 @@ const ConfirmRidePopUp = (props) => {
           <div className="flex items-center gap-5 p-3 border-b-2">
             <i className="ri-map-pin-user-fill text-lg"></i>
             <div>
-              <h3 className="text-lg font-medium">562/11-A</h3>
+              <h3 className="text-lg font-medium">Pickup</h3>
               <p className="text-sm -mt-1 text-gray-600">
-                {props.ride?.pickup}
+                {/* CHANGED: Accessing origin.location_name */}
+                {props.ride?.origin?.location_name}
               </p>
             </div>
           </div>
           <div className="flex items-center gap-5 p-3 border-b-2">
             <i className="ri-map-pin-2-fill text-lg"></i>
             <div>
-              <h3 className="text-lg font-medium">562/11-A</h3>
+              <h3 className="text-lg font-medium">Destination</h3>
               <p className="text-sm -mt-1 text-gray-600">
-                {props.ride?.destination}
+                {/* CHANGED: Accessing destination.location_name */}
+                {props.ride?.destination?.location_name}
               </p>
             </div>
           </div>

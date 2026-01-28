@@ -6,7 +6,6 @@ const WaitingForDriver = (props) => {
       <h5
         className="p-1 text-center w-[93%] absolute top-0 cursor-pointer"
         onClick={() => {
-          // Fixed: Use the setter function, not the boolean state
           props.setWaitingForDriver(false);
         }}
       >
@@ -21,12 +20,14 @@ const WaitingForDriver = (props) => {
         />
         <div className="text-right">
           <h2 className="text-lg font-medium capitalize">
-            {props.ride?.captain.fullname.firstname}
+            {props.ride?.captain?.fullname?.firstname}
           </h2>
           <h4 className="text-xl font-semibold -mt-1 -mb-1">
-            {props.ride?.captain.vehicle.plate}
+            {props.ride?.captain?.vehicleDetails?.vehicleNumber}
           </h4>
-          <p className="text-sm text-gray-600">Maruti Suzuki Alto</p>
+          <p className="text-sm text-gray-600">
+            {props.ride?.captain?.vehicleDetails?.vehicleType}
+          </p>
           <h1 className="text-lg font-semibold"> {props.ride?.otp} </h1>
         </div>
       </div>
@@ -38,7 +39,8 @@ const WaitingForDriver = (props) => {
             <div>
               <h3 className="text-lg font-medium">Pickup</h3>
               <p className="text-sm -mt-1 text-gray-600">
-                {props.ride?.pickup}
+                {/* CHANGED: pickup -> origin.location_name */}
+                {props.ride?.origin?.location_name}
               </p>
             </div>
           </div>
@@ -47,7 +49,8 @@ const WaitingForDriver = (props) => {
             <div>
               <h3 className="text-lg font-medium">Destination</h3>
               <p className="text-sm -mt-1 text-gray-600">
-                {props.ride?.destination}
+                {/* CHANGED: destination -> destination.location_name */}
+                {props.ride?.destination?.location_name}
               </p>
             </div>
           </div>
