@@ -39,38 +39,34 @@ const LiveTracking = () => {
   const mapRef = useRef(null);
   const [isLocationLoaded, setIsLocationLoaded] = useState(false);
 
-  // Get user location on mount
-  useEffect(() => {
-    const getLocation = () => {
-      if ("geolocation" in navigator) {
-        navigator.geolocation.getCurrentPosition(
-          (position) => {
-            const { latitude, longitude } = position.coords;
-            const newPosition = { lat: latitude, lng: longitude };
-            setCurrentPosition(newPosition);
-            setIsLocationLoaded(true);
+  // Get user location on map load (user gesture)
+  const getLocation = () => {
+    if ("geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          const newPosition = { lat: latitude, lng: longitude };
+          setCurrentPosition(newPosition);
+          setIsLocationLoaded(true);
 
-            // Center map if it's already loaded
-            if (mapRef.current) {
-              mapRef.current.setCenter(newPosition);
-              mapRef.current.setZoom(17);
-            }
-          },
-          (error) => {
-            console.warn("Geolocation error:", error);
-            setIsLocationLoaded(true); // Still mark as loaded to use default
-          },
-          {
-            enableHighAccuracy: true,
-            timeout: 15000,
-            maximumAge: 0,
-          },
-        );
-      }
-    };
-
-    getLocation();
-  }, []);
+          // Center map if it's already loaded
+          if (mapRef.current) {
+            mapRef.current.setCenter(newPosition);
+            mapRef.current.setZoom(17);
+          }
+        },
+        (error) => {
+          console.warn("Geolocation error:", error);
+          setIsLocationLoaded(true); // Still mark as loaded to use default
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 15000,
+          maximumAge: 0,
+        },
+      );
+    }
+  };
 
   const handleMapLoad = (mapInstance) => {
     mapRef.current = mapInstance;
@@ -80,6 +76,9 @@ const LiveTracking = () => {
     setTimeout(() => {
       window.dispatchEvent(new Event("resize"));
     }, 100);
+
+    // Request geolocation when map loads (counts as user gesture)
+    getLocation();
 
     // If location is already loaded, center the map
     if (isLocationLoaded) {

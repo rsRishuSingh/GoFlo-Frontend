@@ -8,7 +8,7 @@ import VehiclePanel from "../components/VehiclePanel";
 import ConfirmRide from "../components/ConfirmRide";
 import LookingForDriver from "../components/LookingForDriver";
 import WaitingForDriver from "../components/WaitingForDriver";
-// import { SocketContext } from "../context/SocketContext";
+import { SocketContext } from "../context/SocketContext";
 import { useContext } from "react";
 import { UserDataContext } from "../context/UserContext";
 import { useNavigate } from "react-router-dom";
@@ -45,12 +45,13 @@ const UserHome = () => {
 
   const navigate = useNavigate();
 
-  // const { socket } = useContext(SocketContext);
-  // const { user } = useContext(UserDataContext);
+  const { socket } = useContext(SocketContext);
+  const { user } = useContext(UserDataContext);
 
-  // useEffect(() => {
-  //   socket.emit("join", { userType: "user", userId: user._id });
-  // }, [user]);
+  useEffect(() => {
+    socket.emit("join", { userType: "user", userId: user._id });
+    console.log("User joined socket room:", user._id);
+  }, [user]);
 
   // socket.on("ride-confirmed", (ride) => {
   //   setVehicleFound(false);
