@@ -16,7 +16,6 @@ const VehiclePanel = (props) => {
         onClick={() => {
           props.setConfirmRidePanel(true);
           props.selectVehicle("car");
-
         }}
         className="flex border-2 active:border-black mb-2 rounded-xl w-full p-3 items-center justify-between hover:border-black cursor-pointer transition-all"
       >

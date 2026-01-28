@@ -21,7 +21,7 @@ const UserHome = () => {
 
   const panelRef = useRef(null);
   const panelCloseRef = useRef(null);
-  const panelWrapperRef = useRef(null); // Added this ref for the parent container
+  const panelWrapperRef = useRef(null);
 
   const vehiclePanelRef = useRef(null);
   const [vehiclePanel, setVehiclePanel] = useState(false);
@@ -43,27 +43,39 @@ const UserHome = () => {
   const [vehicleType, setVehicleType] = useState(null);
   const [ride, setRide] = useState(null);
 
+  // New state to store coordinates to avoid re-fetching
+  const [rideCoordinates, setRideCoordinates] = useState(null);
+
   const navigate = useNavigate();
 
   const { socket } = useContext(SocketContext);
   const { user } = useContext(UserDataContext);
 
   useEffect(() => {
+    if (!user?._id) return;
+
     socket.emit("join", { userType: "user", userId: user._id });
     console.log("User joined socket room:", user._id);
-  }, [user]);
 
-  socket.on("ride-confirmed", (ride) => {
-    setVehicleFound(false);
-    setWaitingForDriver(true);
-    setRide(ride);
-  });
+    const handleRideConfirmed = (rideData) => {
+      setVehicleFound(false);
+      setWaitingForDriver(true);
+      setRide(rideData);
+    };
 
-  socket.on("ride-started", (ride) => {
-    console.log("ride");
-    setWaitingForDriver(false);
-    navigate("/user-riding", { state: { ride } });
-  });
+    const handleRideStarted = (rideData) => {
+      setWaitingForDriver(false);
+      navigate("/user-riding", { state: { ride: rideData } });
+    };
+
+    socket.on("ride-confirmed", handleRideConfirmed);
+    socket.on("ride-started", handleRideStarted);
+
+    return () => {
+      socket.off("ride-confirmed", handleRideConfirmed);
+      socket.off("ride-started", handleRideStarted);
+    };
+  }, [user, socket, navigate]);
 
   const handlePickupChange = async (e) => {
     setPickup(e.target.value);
@@ -105,11 +117,11 @@ const UserHome = () => {
 
   useGSAP(() => {
     if (panelOpen) {
-      gsap.to(panelWrapperRef.current, { height: "100%" }); // Animate parent height to 100%
+      gsap.to(panelWrapperRef.current, { height: "100%" });
       gsap.to(panelRef.current, { height: "70%", padding: 24 });
       gsap.to(panelCloseRef.current, { opacity: 1 });
     } else {
-      gsap.to(panelWrapperRef.current, { height: "30%" }); // Animate parent height back to 30%
+      gsap.to(panelWrapperRef.current, { height: "30%" });
       gsap.to(panelRef.current, { height: "0%", padding: 0 });
       gsap.to(panelCloseRef.current, { opacity: 0 });
     }
@@ -134,109 +146,91 @@ const UserHome = () => {
     [waitingForDriver],
   );
 
- async function findTrip() {
-   try {
-     const pickupCoords = await axios.get(
-       `${import.meta.env.VITE_BASE_URL}/maps/get-coordinates`,
-       {
-         params: { address: pickup },
-         headers: {
-           Authorization: `Bearer ${localStorage.getItem("userToken")}`,
-         },
-       },
-     );
+  async function findTrip() {
+    try {
+      const pickupCoords = await axios.get(
+        `${import.meta.env.VITE_BASE_URL}/maps/get-coordinates`,
+        {
+          params: { address: pickup },
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("userToken")}`,
+          },
+        },
+      );
 
-     const destinationCoords = await axios.get(
-       `${import.meta.env.VITE_BASE_URL}/maps/get-coordinates`,
-       {
-         params: { address: destination },
-         headers: {
-           Authorization: `Bearer ${localStorage.getItem("userToken")}`,
-         },
-       },
-     );
+      const destinationCoords = await axios.get(
+        `${import.meta.env.VITE_BASE_URL}/maps/get-coordinates`,
+        {
+          params: { address: destination },
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("userToken")}`,
+          },
+        },
+      );
 
-     const originData = {
-       location_name: pickup,
-       ltd: pickupCoords.data.ltd,
-       lng: pickupCoords.data.lng,
-     };
+      // Construct data using 'ltd' as per your backend requirement
+      const originData = {
+        location_name: pickup,
+        ltd: pickupCoords.data.ltd, // Map service likely returns 'latitude'
+        lng: pickupCoords.data.lng,
+      };
 
-     const destinationData = {
-       location_name: destination,
-       ltd: destinationCoords.data.ltd,
-       lng: destinationCoords.data.lng,
-     };
+      const destinationData = {
+        location_name: destination,
+        ltd: destinationCoords.data.ltd,
+        lng: destinationCoords.data.lng,
+      };
 
-     const response = await axios.post(
-       `${import.meta.env.VITE_BASE_URL}/rides/get-fare`,
-       { origin: originData, destination: destinationData },
-       {
-         headers: {
-           Authorization: `Bearer ${localStorage.getItem("userToken")}`,
-         },
-       },
-     );
+      // Store coordinates for createRide
+      setRideCoordinates({ origin: originData, destination: destinationData });
 
-     setFare(response.data);
-     setVehiclePanel(true);
-     setPanelOpen(false);
-   } catch (error) {
-     console.error("Error finding trip:", error);
-     if (error.response) {
-       alert(error.response.data.message || "Error calculating fare");
-     }
-   }
- }
+      const response = await axios.post(
+        `${import.meta.env.VITE_BASE_URL}/rides/get-fare`,
+        { origin: originData, destination: destinationData },
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("userToken")}`,
+          },
+        },
+      );
 
- async function createRide() {
-   try {
-     const pickupCoords = await axios.get(
-       `${import.meta.env.VITE_BASE_URL}/maps/get-coordinates`,
-       {
-         params: { address: pickup },
-         headers: {
-           Authorization: `Bearer ${localStorage.getItem("userToken")}`,
-         },
-       },
-     );
+      setFare(response.data);
+      setVehiclePanel(true);
+      setPanelOpen(false);
+    } catch (error) {
+      console.error("Error finding trip:", error);
+      if (error.response) {
+        alert(error.response.data.message || "Error calculating fare");
+      }
+    }
+  }
 
-     const destinationCoords = await axios.get(
-       `${import.meta.env.VITE_BASE_URL}/maps/get-coordinates`,
-       {
-         params: { address: destination },
-         headers: {
-           Authorization: `Bearer ${localStorage.getItem("userToken")}`,
-         },
-       },
-     );
+  async function createRide() {
+    // Reuse stored coordinates to avoid double API calls
+    if (!rideCoordinates) {
+      alert("Invalid ride data. Please search again.");
+      return;
+    }
 
-     const originData = {
-       location_name: pickup,
-       ltd: pickupCoords.data.ltd,
-       lng: pickupCoords.data.lng,
-     };
-
-     const destinationData = {
-       location_name: destination,
-       ltd: destinationCoords.data.ltd,
-       lng: destinationCoords.data.lng,
-     };
-
-     await axios.post(
-       `${import.meta.env.VITE_BASE_URL}/rides/create`,
-       { origin: originData, destination: destinationData, vehicleType },
-       {
-         headers: {
-           Authorization: `Bearer ${localStorage.getItem("userToken")}`,
-         },
-       },
-     );
-   } catch (error) {
-     console.error("Error creating ride:", error);
-     alert("Error creating ride. Please try again.");
-   }
- }
+    try {
+      await axios.post(
+        `${import.meta.env.VITE_BASE_URL}/rides/create`,
+        {
+          origin: rideCoordinates.origin,
+          destination: rideCoordinates.destination,
+          vehicleType,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("userToken")}`,
+          },
+        },
+      );
+    } catch (error) {
+      console.error("Error creating ride:", error);
+      alert("Error creating ride. Please try again.");
+    }
+  }
 
   return (
     <div className="h-screen relative w-full overflow-hidden">
@@ -366,7 +360,7 @@ const UserHome = () => {
           <div
             ref={ref}
             className="pointer-events-auto w-full max-w-md translate-y-full
-                       bg-white px-3 py-6 pt-12 rounded-t-3xl shadow-2xl"
+                        bg-white px-3 py-6 pt-12 rounded-t-3xl shadow-2xl"
           >
             {Component}
           </div>

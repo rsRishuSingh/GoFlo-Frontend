@@ -24,21 +24,27 @@ const LookingForDriver = (props) => {
             <i className="ri-map-pin-user-fill text-lg"></i>
             <div>
               <h3 className="text-lg font-medium">Pickup</h3>
-              <p className="text-sm -mt-1 text-gray-600">{props.pickup}</p>
+              <p className="text-sm -mt-1 text-gray-600">
+                {/* FIXED: Check for object property */}
+                {props.pickup}
+              </p>
             </div>
           </div>
           <div className="flex items-center gap-5 p-3 border-b-2 border-gray-100">
             <i className="text-lg ri-map-pin-2-fill"></i>
             <div>
               <h3 className="text-lg font-medium">Destination</h3>
-              <p className="text-sm -mt-1 text-gray-600">{props.destination}</p>
+              <p className="text-sm -mt-1 text-gray-600">
+                {/* FIXED: Check for object property */}
+                {props.destination}
+              </p>
             </div>
           </div>
           <div className="flex items-center gap-5 p-3">
             <i className="ri-currency-line text-lg"></i>
             <div>
               <h3 className="text-lg font-medium">
-                ₹{props.fare[props.vehicleType]}{" "}
+                ₹{props.fare[props.vehicleType]}
               </h3>
               <p className="text-sm -mt-1 text-gray-600">Cash</p>
             </div>

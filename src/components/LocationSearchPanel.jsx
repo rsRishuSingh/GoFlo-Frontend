@@ -14,13 +14,11 @@ const LocationSearchPanel = ({
     } else if (activeField === "destination") {
       setDestination(suggestion);
     }
-    // setVehiclePanel(true)
-    // setPanelOpen(false)
+    // Logic to auto-close panel or auto-focus next field could go here
   };
 
   return (
     <div>
-      {/* Display fetched suggestions */}
       {suggestions.map((elem, idx) => (
         <div
           key={idx}

@@ -47,7 +47,7 @@ const FinishRide = (props) => {
             alt="User Avatar"
           />
           <h2 className="text-lg font-medium capitalize">
-            {props.ride?.user?.fullname.firstname}
+            {props.ride?.user?.fullname?.firstname}
           </h2>
         </div>
         <h5 className="text-lg font-semibold">2.2 KM</h5>
@@ -60,7 +60,7 @@ const FinishRide = (props) => {
             <div>
               <h3 className="text-lg font-medium">Pickup</h3>
               <p className="text-sm -mt-1 text-gray-600">
-                {/* CHANGED: pickup -> origin.location_name */}
+                {/* FIXED: Data Access */}
                 {props.ride?.origin?.location_name}
               </p>
             </div>
@@ -70,7 +70,7 @@ const FinishRide = (props) => {
             <div>
               <h3 className="text-lg font-medium">Destination</h3>
               <p className="text-sm -mt-1 text-gray-600">
-                {/* CHANGED: Accessing destination object */}
+                {/* FIXED: Data Access */}
                 {props.ride?.destination?.location_name}
               </p>
             </div>

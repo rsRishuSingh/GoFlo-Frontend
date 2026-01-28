@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useRef } from "react";
-import { LoadScript, GoogleMap, Marker } from "@react-google-maps/api";
+import { GoogleMap, Marker } from "@react-google-maps/api"; // Remove LoadScript
 
 const containerStyle = {
   width: "100%",
   height: "100%",
   position: "relative",
   display: "flex",
+  // CSS Fix for "Passive Event Listener" warnings:
+  touchAction: "none",
 };
 
 const defaultCenter = {
@@ -20,10 +22,11 @@ const mapOptions = {
   fullscreenControl: false,
   streetViewControl: false,
   mapTypeControl: false,
-  gestureHandling: "greedy", // Allow dragging without keyboard modifier
+  gestureHandling: "greedy",
   disableDoubleClickZoom: false,
   clickableIcons: true,
   keyboardShortcuts: true,
+  // touchAction: "none" <-- Remove this from options, it belongs in containerStyle
   styles: [
     {
       featureType: "poi",
@@ -49,7 +52,6 @@ const LiveTracking = () => {
           setCurrentPosition(newPosition);
           setIsLocationLoaded(true);
 
-          // Center map if it's already loaded
           if (mapRef.current) {
             mapRef.current.setCenter(newPosition);
             mapRef.current.setZoom(17);
@@ -57,7 +59,7 @@ const LiveTracking = () => {
         },
         (error) => {
           console.warn("Geolocation error:", error);
-          setIsLocationLoaded(true); // Still mark as loaded to use default
+          setIsLocationLoaded(true);
         },
         {
           enableHighAccuracy: true,
@@ -72,22 +74,18 @@ const LiveTracking = () => {
     mapRef.current = mapInstance;
     setMap(mapInstance);
 
-    // Trigger a resize event to ensure map renders correctly
     setTimeout(() => {
       window.dispatchEvent(new Event("resize"));
     }, 100);
 
-    // Request geolocation when map loads (counts as user gesture)
     getLocation();
 
-    // If location is already loaded, center the map
     if (isLocationLoaded) {
       mapInstance.setCenter(currentPosition);
       mapInstance.setZoom(17);
     }
   };
 
-  // Center map when location is loaded
   useEffect(() => {
     if (mapRef.current && isLocationLoaded && currentPosition) {
       mapRef.current.setCenter(currentPosition);
@@ -96,17 +94,16 @@ const LiveTracking = () => {
   }, [isLocationLoaded, currentPosition]);
 
   return (
-    <LoadScript googleMapsApiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY}>
-      <GoogleMap
-        mapContainerStyle={containerStyle}
-        center={currentPosition}
-        zoom={15}
-        onLoad={handleMapLoad}
-        options={mapOptions}
-      >
-        <Marker position={currentPosition} />
-      </GoogleMap>
-    </LoadScript>
+    // Removed <LoadScript> wrapper (it is now in App.jsx)
+    <GoogleMap
+      mapContainerStyle={containerStyle}
+      center={currentPosition}
+      zoom={15}
+      onLoad={handleMapLoad}
+      options={mapOptions}
+    >
+      <Marker position={currentPosition} />
+    </GoogleMap>
   );
 };
 
