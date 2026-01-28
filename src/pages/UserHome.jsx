@@ -21,6 +21,7 @@ const UserHome = () => {
 
   const panelRef = useRef(null);
   const panelCloseRef = useRef(null);
+  const panelWrapperRef = useRef(null); // Added this ref for the parent container
 
   const vehiclePanelRef = useRef(null);
   const [vehiclePanel, setVehiclePanel] = useState(false);
@@ -103,9 +104,11 @@ const UserHome = () => {
 
   useGSAP(() => {
     if (panelOpen) {
+      gsap.to(panelWrapperRef.current, { height: "100%" }); // Animate parent height to 100%
       gsap.to(panelRef.current, { height: "70%", padding: 24 });
       gsap.to(panelCloseRef.current, { opacity: 1 });
     } else {
+      gsap.to(panelWrapperRef.current, { height: "30%" }); // Animate parent height back to 30%
       gsap.to(panelRef.current, { height: "0%", padding: 0 });
       gsap.to(panelCloseRef.current, { opacity: 0 });
     }
@@ -163,7 +166,7 @@ const UserHome = () => {
   }
 
   return (
-    <div className="h-screen relative w-full">
+    <div className="h-screen relative w-full overflow-hidden">
       <img
         className="w-16 absolute left-5 top-5 z-10"
         src="https://upload.wikimedia.org/wikipedia/commons/c/cc/Uber_logo_2018.png"
@@ -174,7 +177,10 @@ const UserHome = () => {
         <LiveTracking />
       </div>
 
-      <div className="flex flex-col h-[30%] absolute bottom-0 w-full z-10">
+      <div
+        ref={panelWrapperRef}
+        className="flex flex-col h-[30%] absolute bottom-0 w-full z-10 bg-white"
+      >
         <div className="p-6 bg-white rounded-t-3xl shadow-lg relative">
           <h5
             ref={panelCloseRef}
