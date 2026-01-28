@@ -9,7 +9,7 @@ import { useEffect, useContext } from "react";
 import { SocketContext } from "../context/SocketContext";
 import { CaptainDataContext } from "../context/CaptainContext";
 import axios from "axios";
-import LiveTracking from "../components/Livetracking"; // Uncomment if you want real map
+import LiveTracking from "../components/LiveTracking"; 
 
 const CaptainHome = () => {
   const [ridePopupPanel, setRidePopupPanel] = useState(false);
@@ -33,8 +33,8 @@ const CaptainHome = () => {
           socket.emit("update-location-captain", {
             userId: captain._id,
             location: {
-              ltd: position.coords.latitude,
-              lng: position.coords.longitude,
+              ltd: position.coords.ltd,
+              lng: position.coords.lng,
             },
           });
         });
@@ -141,7 +141,6 @@ const CaptainHome = () => {
       {/* Map Section */}
       <div className="h-3/5 relative z-0">
         <LiveTracking />
-       
       </div>
 
       {/* Captain Details Dashboard - Static Bottom Panel */}

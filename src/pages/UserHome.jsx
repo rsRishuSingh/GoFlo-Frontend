@@ -12,7 +12,7 @@ import { SocketContext } from "../context/SocketContext";
 import { useContext } from "react";
 import { UserDataContext } from "../context/UserContext";
 import { useNavigate } from "react-router-dom";
-import LiveTracking from "../components/Livetracking";
+import LiveTracking from "../components/LiveTracking";
 
 const UserHome = () => {
   const [pickup, setPickup] = useState("");
@@ -161,14 +161,14 @@ const UserHome = () => {
       // Create origin and destination objects
       const originData = {
         location_name: pickup,
-        latitude: pickupCoords.data.lat,
-        longitude: pickupCoords.data.lng,
+        lat: pickupCoords.data.lat,
+        lng: pickupCoords.data.lng,
       };
 
       const destinationData = {
         location_name: destination,
-        latitude: destinationCoords.data.lat,
-        longitude: destinationCoords.data.lng,
+        lat: destinationCoords.data.lat,
+        lng: destinationCoords.data.lng,
       };
 
       // Get fare with structured data
@@ -218,14 +218,14 @@ const UserHome = () => {
       // Create origin and destination objects
       const originData = {
         location_name: pickup,
-        latitude: pickupCoords.data.lat,
-        longitude: pickupCoords.data.lng,
+        lat: pickupCoords.data.lat,
+        lng: pickupCoords.data.lng,
       };
 
       const destinationData = {
         location_name: destination,
-        latitude: destinationCoords.data.lat,
-        longitude: destinationCoords.data.lng,
+        lat: destinationCoords.data.lat,
+        lng: destinationCoords.data.lng,
       };
 
       await axios.post(

@@ -9,7 +9,7 @@ const ConfirmRidePopUp = (props) => {
   const submitHander = async (e) => {
     e.preventDefault();
 
-    const response = await axios.get(
+    const response = await axios.post(
       `${import.meta.env.VITE_BASE_URL}/rides/start-ride`,
       {
         params: {
@@ -17,7 +17,7 @@ const ConfirmRidePopUp = (props) => {
           otp: otp,
         },
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          Authorization: `Bearer ${localStorage.getItem("captainToken")}`,
         },
       },
     );
