@@ -30,18 +30,19 @@ const CaptainHome = () => {
     const updateLocation = () => {
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition((position) => {
+          console.log("Updating location:", position.coords);
           socket.emit("update-location-captain", {
             userId: captain._id,
             location: {
-              ltd: position.coords.ltd,
-              lng: position.coords.lng,
+              ltd: position.coords.latitude,
+              lng: position.coords.longitude,
             },
           });
         });
       }
     };
 
-    const locationInterval = setInterval(updateLocation, 10000);
+    const locationInterval = setInterval(updateLocation, 2000);
     updateLocation();
 
     // return () => clearInterval(locationInterval)
@@ -49,6 +50,7 @@ const CaptainHome = () => {
 
   socket.on("new-ride", (data) => {
     setRide(data);
+    console.log("new ride : ",data);
     setRidePopupPanel(true);
   });
 
@@ -78,7 +80,6 @@ const CaptainHome = () => {
       `${import.meta.env.VITE_BASE_URL}/rides/confirm`,
       {
         rideId: ride._id,
-        captainId: captain._id,
       },
       {
         headers: {
@@ -87,8 +88,11 @@ const CaptainHome = () => {
       },
     );
 
-    setRidePopupPanel(false);
-    setConfirmRidePopupPanel(true);
+    // Only update UI if the request was successful
+    if (response.status === 200) {
+      setRidePopupPanel(false);
+      setConfirmRidePopupPanel(true);
+    }
   }
 
   useGSAP(

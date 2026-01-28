@@ -134,114 +134,109 @@ const UserHome = () => {
     [waitingForDriver],
   );
 
-  async function findTrip() {
-    try {
-      // Get coordinates for pickup location
-      const pickupCoords = await axios.get(
-        `${import.meta.env.VITE_BASE_URL}/maps/get-coordinates`,
-        {
-          params: { address: pickup },
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("userToken")}`,
-          },
-        },
-      );
+ async function findTrip() {
+   try {
+     const pickupCoords = await axios.get(
+       `${import.meta.env.VITE_BASE_URL}/maps/get-coordinates`,
+       {
+         params: { address: pickup },
+         headers: {
+           Authorization: `Bearer ${localStorage.getItem("userToken")}`,
+         },
+       },
+     );
 
-      // Get coordinates for destination location
-      const destinationCoords = await axios.get(
-        `${import.meta.env.VITE_BASE_URL}/maps/get-coordinates`,
-        {
-          params: { address: destination },
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("userToken")}`,
-          },
-        },
-      );
+     const destinationCoords = await axios.get(
+       `${import.meta.env.VITE_BASE_URL}/maps/get-coordinates`,
+       {
+         params: { address: destination },
+         headers: {
+           Authorization: `Bearer ${localStorage.getItem("userToken")}`,
+         },
+       },
+     );
 
-      // Create origin and destination objects
-      const originData = {
-        location_name: pickup,
-        lat: pickupCoords.data.lat,
-        lng: pickupCoords.data.lng,
-      };
+     const originData = {
+       location_name: pickup,
+       ltd: pickupCoords.data.ltd,
+       lng: pickupCoords.data.lng,
+     };
 
-      const destinationData = {
-        location_name: destination,
-        lat: destinationCoords.data.lat,
-        lng: destinationCoords.data.lng,
-      };
+     const destinationData = {
+       location_name: destination,
+       ltd: destinationCoords.data.ltd,
+       lng: destinationCoords.data.lng,
+     };
 
-      // Get fare with structured data
-      const response = await axios.post(
-        `${import.meta.env.VITE_BASE_URL}/rides/get-fare`,
-        { origin: originData, destination: destinationData },
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("userToken")}`,
-          },
-        },
-      );
+     const response = await axios.post(
+       `${import.meta.env.VITE_BASE_URL}/rides/get-fare`,
+       { origin: originData, destination: destinationData },
+       {
+         headers: {
+           Authorization: `Bearer ${localStorage.getItem("userToken")}`,
+         },
+       },
+     );
 
-      setFare(response.data);
-      setVehiclePanel(true);
-      setPanelOpen(false);
-    } catch (error) {
-      console.error("Error finding trip:", error);
-      alert("Error calculating fare. Please try again.");
-    }
-  }
+     setFare(response.data);
+     setVehiclePanel(true);
+     setPanelOpen(false);
+   } catch (error) {
+     console.error("Error finding trip:", error);
+     if (error.response) {
+       alert(error.response.data.message || "Error calculating fare");
+     }
+   }
+ }
 
-  async function createRide() {
-    try {
-      // Get coordinates for pickup location
-      const pickupCoords = await axios.get(
-        `${import.meta.env.VITE_BASE_URL}/maps/get-coordinates`,
-        {
-          params: { address: pickup },
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("userToken")}`,
-          },
-        },
-      );
+ async function createRide() {
+   try {
+     const pickupCoords = await axios.get(
+       `${import.meta.env.VITE_BASE_URL}/maps/get-coordinates`,
+       {
+         params: { address: pickup },
+         headers: {
+           Authorization: `Bearer ${localStorage.getItem("userToken")}`,
+         },
+       },
+     );
 
-      // Get coordinates for destination location
-      const destinationCoords = await axios.get(
-        `${import.meta.env.VITE_BASE_URL}/maps/get-coordinates`,
-        {
-          params: { address: destination },
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("userToken")}`,
-          },
-        },
-      );
+     const destinationCoords = await axios.get(
+       `${import.meta.env.VITE_BASE_URL}/maps/get-coordinates`,
+       {
+         params: { address: destination },
+         headers: {
+           Authorization: `Bearer ${localStorage.getItem("userToken")}`,
+         },
+       },
+     );
 
-      // Create origin and destination objects
-      const originData = {
-        location_name: pickup,
-        lat: pickupCoords.data.lat,
-        lng: pickupCoords.data.lng,
-      };
+     const originData = {
+       location_name: pickup,
+       ltd: pickupCoords.data.ltd,
+       lng: pickupCoords.data.lng,
+     };
 
-      const destinationData = {
-        location_name: destination,
-        lat: destinationCoords.data.lat,
-        lng: destinationCoords.data.lng,
-      };
+     const destinationData = {
+       location_name: destination,
+       ltd: destinationCoords.data.ltd,
+       lng: destinationCoords.data.lng,
+     };
 
-      await axios.post(
-        `${import.meta.env.VITE_BASE_URL}/rides/create`,
-        { origin: originData, destination: destinationData, vehicleType },
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("userToken")}`,
-          },
-        },
-      );
-    } catch (error) {
-      console.error("Error creating ride:", error);
-      alert("Error creating ride. Please try again.");
-    }
-  }
+     await axios.post(
+       `${import.meta.env.VITE_BASE_URL}/rides/create`,
+       { origin: originData, destination: destinationData, vehicleType },
+       {
+         headers: {
+           Authorization: `Bearer ${localStorage.getItem("userToken")}`,
+         },
+       },
+     );
+   } catch (error) {
+     console.error("Error creating ride:", error);
+     alert("Error creating ride. Please try again.");
+   }
+ }
 
   return (
     <div className="h-screen relative w-full overflow-hidden">

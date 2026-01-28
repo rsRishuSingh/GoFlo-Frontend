@@ -9,19 +9,18 @@ const ConfirmRidePopUp = (props) => {
   const submitHander = async (e) => {
     e.preventDefault();
 
-    const response = await axios.post(
-      `${import.meta.env.VITE_BASE_URL}/rides/start-ride`,
-      {
-        params: {
-          rideId: props.ride._id,
-          otp: otp,
-        },
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("captainToken")}`,
-        },
-      },
-    );
-
+   const response = await axios.post(
+     `${import.meta.env.VITE_BASE_URL}/rides/start-ride`,
+     {
+       rideId: props.ride._id,
+       otp: otp,
+     },
+     {
+       headers: {
+         Authorization: `Bearer ${localStorage.getItem("captainToken")}`,
+       },
+     },
+   );
     if (response.status === 200) {
       props.setConfirmRidePopupPanel(false);
       props.setRidePopupPanel(false);
@@ -31,7 +30,6 @@ const ConfirmRidePopUp = (props) => {
 
   return (
  <div className="h-full relative">
-      {/* FIXED: Removed 'absolute top-0' and changed width to 'w-full' */}
       <h5
         className="p-1 text-center w-full cursor-pointer"
         onClick={() => {
