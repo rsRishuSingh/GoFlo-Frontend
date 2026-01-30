@@ -77,6 +77,27 @@ const UserHome = () => {
     };
   }, [user, socket, navigate]);
 
+   useEffect(() => {
+        const refreshToken = async () => {
+          try {
+            const response = await axios.post(
+              `${import.meta.env.VITE_BASE_URL}/users/refresh-token`,
+              {},
+              {
+                withCredentials: true, 
+              },
+            );
+            localStorage.setItem("userToken", response.data.captainToken);
+          } catch (err) {
+            console.error("Session expired, please login again");
+            navigate("/user-login");
+          }
+        };
+        refreshToken();
+        const interval = setInterval(refreshToken, 50 * 60 * 1000);
+        return () => clearInterval(interval);
+      }, []);
+
   const handlePickupChange = async (e) => {
     setPickup(e.target.value);
     try {

@@ -27,6 +27,27 @@ const CaptainHome = () => {
       userType: "captain",
     });
 
+    useEffect(() => {
+      const refreshToken = async () => {
+        try {
+          const response = await axios.post(
+            `${import.meta.env.VITE_BASE_URL}/captains/refresh-token`,
+            {},
+            {
+              withCredentials: true, 
+            },
+          );
+          localStorage.setItem("captainToken", response.data.captainToken);
+        } catch (err) {
+          console.error("Session expired, please login again");
+          navigate("/captain-login");
+        }
+      };
+      refreshToken();
+      const interval = setInterval(refreshToken, 50 * 60 * 1000);
+      return () => clearInterval(interval);
+    }, []);
+
     const updateLocation = () => {
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition((position) => {
