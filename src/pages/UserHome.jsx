@@ -142,7 +142,6 @@ const UserHome = () => {
 
   const findTrip = async () => {
     try {
-      // Fetch coordinates in parallel for speed
       const [pickupRes, destRes] = await Promise.all([
         axios.get(`${import.meta.env.VITE_BASE_URL}/maps/get-coordinates`, {
           params: { address: pickup },
@@ -207,22 +206,38 @@ const UserHome = () => {
   };
 
   const getAddressFromCoordinates = async (ltd, lng) => {
-     const addressResponse = await axios.get(
-       `${import.meta.env.VITE_BASE_URL}/maps/get-address`,
-       {
-         params: { ltd, lng},
-         headers: getAuthHeaders(),
-       },
-     );
-     return addressResponse.data.address;
-  }
-  const handleEmergencyRide = async () => {
+    const addressResponse = await axios.get(
+      `${import.meta.env.VITE_BASE_URL}/maps/get-address`,
+      {
+        params: { ltd, lng },
+        headers: getAuthHeaders(),
+      },
+    );
+    return addressResponse.data.address;
+  };
+
+  // --- NEW: Handle setting current location as pickup ---
+  const handleUseCurrentLocation = async () => {
     try {
-      // 1. Get Location
       const position = await getCurrentPosition();
       const { latitude, longitude } = position.coords;
 
-      // 2. Get Nearest Hospital
+      // Fetch readable address
+      const address = await getAddressFromCoordinates(latitude, longitude);
+
+      // Update Pickup State
+      setPickup(address);
+    } catch (error) {
+      console.error("Error setting current location:", error);
+      alert("Unable to fetch your location");
+    }
+  };
+
+  const handleEmergencyRide = async () => {
+    try {
+      const position = await getCurrentPosition();
+      const { latitude, longitude } = position.coords;
+
       const hospitalResponse = await axios.get(
         `${import.meta.env.VITE_BASE_URL}/maps/get-nearest-hospital`,
         {
@@ -232,16 +247,16 @@ const UserHome = () => {
       );
       const hospital = hospitalResponse.data;
 
-      // 3. Get Readable Address
-     
-      const location_name = await getAddressFromCoordinates(latitude, longitude);
+      const location_name = await getAddressFromCoordinates(
+        latitude,
+        longitude,
+      );
       const originData = {
         location_name,
         ltd: latitude,
         lng: longitude,
       };
 
-      // 4. Create Ride
       const rideResponse = await axios.post(
         `${import.meta.env.VITE_BASE_URL}/rides/create`,
         {
@@ -313,15 +328,21 @@ const UserHome = () => {
         <LiveTracking />
       </div>
 
-      {/* Emergency Button UI */}
       <button
         onClick={handleEmergencyRide}
-        className="absolute top-[2%] right-5 z-50 bg-red-600 text-white h-13 w-13 rounded-full shadow-2xl flex items-center justify-center animate-pulse border-4 border-white active:scale-90 transition-all cursor-pointer"
+        className="absolute top-[2%] right-5 z-5 bg-red-600 text-white h-13 w-13 rounded-full shadow-2xl flex items-center justify-center animate-pulse border-4 border-white active:scale-90 transition-all cursor-pointer"
       >
         <div className="flex flex-col items-center">
           <i className="ri-alarm-warning-fill text-lg"></i>
           <span className="text-[10px] font-bold uppercase">SOS</span>
         </div>
+      </button>
+
+      <button
+        onClick={handleUseCurrentLocation}
+        className="absolute bottom-[32%] right-5 z-5 h-10 w-10 bg-white rounded-full flex items-center justify-center shadow-lg hover:bg-gray-100 transition-colors"
+      >
+        <i className="ri-crosshair-fill text-xl text-gray-700"></i>
       </button>
 
       <div

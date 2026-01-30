@@ -1,13 +1,12 @@
 
 
 import { Link } from 'react-router-dom'
-import carBackSeat from "../assets/carbackSeat.png";
 const Start = () => {
   return (
-     <div>
+    <div>
       <div
         className="relative bg-cover bg-center h-screen pt-8 flex justify-between flex-col w-full"
-        style={{ backgroundImage: `url(${carBackSeat})` }}
+        style={{ backgroundImage: "url(/carbackSeat.png)" }}
       >
         <div className="absolute inset-0 bg-linear-to-b from-transparent via-black/40 to-black"></div>
 
@@ -32,7 +31,7 @@ const Start = () => {
         </div>
       </div>
     </div>
-  )
+  );
 
 }
 

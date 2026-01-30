@@ -1,19 +1,61 @@
-import React from "react";
-import { Link, useLocation } from "react-router-dom";
-import { useEffect, useContext } from "react";
+import React, { useRef, useState, useEffect, useContext } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { SocketContext } from "../context/SocketContext";
-import { useNavigate } from "react-router-dom";
-import LiveTracking from "../components/LiveTracking";
+import LiveRouteTracking from "../components/LiveRouteTracking";
 
 const UserRiding = () => {
+  const [payMessage, setPayMessage] = useState("Pay via Coupon");
   const location = useLocation();
-  const { ride } = location.state || {}; // Retrieve ride data
-  const { socket } = useContext(SocketContext);
   const navigate = useNavigate();
+  const { socket } = useContext(SocketContext);
 
-  socket.on("ride-ended", () => {
-    navigate("/user-home");
+  // We use a function inside useState to load from localStorage BEFORE the first render.
+  // This prevents the component from being "null" for a split second on refresh.
+  const [ride, setRide] = useState(() => {
+    if (location.state?.ride) {
+      localStorage.setItem("currentRide", JSON.stringify(location.state.ride));
+      return location.state.ride;
+    } else {
+      const savedRide = localStorage.getItem("currentRide");
+      return savedRide ? JSON.parse(savedRide) : null;
+    }
   });
+
+  // 2. FORCE SOCKET JOIN ON REFRESH
+  useEffect(() => {
+    if (ride && socket) {
+      // Immediately tell the server we are part of this ride
+      socket.emit("join-ride", { rideId: ride._id });
+    }
+  }, [ride, socket]);
+
+  // 3. LISTEN FOR RIDE END
+  useEffect(() => {
+    if (socket) {
+      socket.on("ride-ended", () => {
+        localStorage.removeItem("currentRide");
+        navigate("/user-home");
+      });
+    }
+    return () => {
+      if (socket) socket.off("ride-ended");
+    };
+  }, [socket, navigate]);
+
+  // If data is still missing, redirect to home
+  if (!ride) {
+    navigate('/user-home');
+    return (
+      <div className="h-screen flex items-center justify-center">
+        Loading...
+      </div>
+    );
+  }
+
+  const destinationCoords = {
+    lat: ride?.destination?.ltd || 28.6139,
+    lng: ride?.destination?.lng || 77.209,
+  };
 
   return (
     <div className="h-screen">
@@ -25,7 +67,11 @@ const UserRiding = () => {
       </Link>
 
       <div className="h-1/2">
-        <LiveTracking />
+        <LiveRouteTracking
+          destination={destinationCoords}
+          isCaptain={false}
+          rideId={ride._id}
+        />
       </div>
 
       <div className="h-1/2 p-4">
@@ -37,16 +83,14 @@ const UserRiding = () => {
           />
           <div className="text-right">
             <h2 className="text-lg font-medium capitalize">
-              {ride?.captain.fullname.firstname}
+              {ride.captain.fullname.firstname}
             </h2>
             <h4 className="text-xl font-semibold -mt-1 -mb-1">
-              {/* FIXED: Updated to match vehicleDetails schema */}
-              {ride?.captain.vehicleDetails.vehicleNumber}
+              {ride.captain.vehicleDetails.vehicleNumber}
             </h4>
             <p className="text-sm text-gray-600 capitalize">
-              {/* FIXED: Dynamic vehicle description */}
-              {ride?.captain.vehicleDetails.color}{" "}
-              {ride?.captain.vehicleDetails.vehicleType}
+              {ride.captain.vehicleDetails.color}{" "}
+              {ride.captain.vehicleDetails.vehicleType}
             </p>
           </div>
         </div>
@@ -58,22 +102,24 @@ const UserRiding = () => {
               <div>
                 <h3 className="text-lg font-medium">Destination</h3>
                 <p className="text-sm -mt-1 text-gray-600">
-                  {/* FIXED: Access location_name from object */}
-                  {ride?.destination?.location_name || ride?.destination}
+                  {ride.destination.location_name}
                 </p>
               </div>
             </div>
             <div className="flex items-center gap-5 p-3">
               <i className="ri-currency-line"></i>
               <div>
-                <h3 className="text-lg font-medium">₹{ride?.fare} </h3>
+                <h3 className="text-lg font-medium">₹{ride.fare} </h3>
                 <p className="text-sm -mt-1 text-gray-600">Cash</p>
               </div>
             </div>
           </div>
         </div>
-        <button className="w-full mt-5 bg-green-600 text-white font-semibold p-2 rounded-lg">
-          Make a Payment
+        <button
+          className="w-full mt-5 bg-green-600 text-white font-semibold p-2 rounded-lg"
+          onClick={() => setPayMessage("Paid via Coupon")}
+        >
+          {payMessage}
         </button>
       </div>
     </div>

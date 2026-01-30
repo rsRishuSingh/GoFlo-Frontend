@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect, useContext } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import CaptainDetails from "../components/CaptainDetails";
 import RidePopUp from "../components/RidePopUp";
 import { useGSAP } from "@gsap/react";
@@ -20,14 +20,16 @@ const CaptainHome = () => {
 
   const { socket } = useContext(SocketContext);
   const { captain } = useContext(CaptainDataContext);
+  const navigate = useNavigate();
 
+  // 1. Socket Connection & Location Updates
   useEffect(() => {
+    if (!captain?._id) return;
+
     socket.emit("join", {
       userId: captain._id,
       userType: "captain",
     });
-
-    
 
     const updateLocation = () => {
       if (navigator.geolocation) {
@@ -38,17 +40,22 @@ const CaptainHome = () => {
               ltd: position.coords.latitude,
               lng: position.coords.longitude,
             },
+            // Note: If we had a confirmed ride ID in state here, we'd pass it.
+            // Since active ride tracking moves to CaptainRiding.jsx, we send null here.
+            activeRideId: null,
           });
         });
       }
     };
 
     const locationInterval = setInterval(updateLocation, 10000);
+
     updateLocation();
 
     return () => clearInterval(locationInterval);
   }, [captain, socket]);
 
+  // 2. Token Refresh Logic
   useEffect(() => {
     const refreshToken = async () => {
       try {
@@ -65,21 +72,28 @@ const CaptainHome = () => {
     };
     const interval = setInterval(refreshToken, 50 * 60 * 1000);
     return () => clearInterval(interval);
-  }, []);
+  }, [navigate]);
 
-  socket.on("new-ride", (data) => {
-    console.log("New ride received:", data);
-    setRide(data);
-    setRidePopupPanel(true);
-  });
+  // 3. Listen for New Rides
+  useEffect(() => {
+    socket.on("new-ride", (data) => {
+      console.log("New ride received:", data);
+      setRide(data);
+      setRidePopupPanel(true);
+    });
 
+    // Cleanup listener on unmount
+    return () => {
+      socket.off("new-ride");
+    };
+  }, [socket]);
+
+  // 4. Confirm Ride Logic
   async function confirmRide() {
     try {
       const response = await axios.post(
         `${import.meta.env.VITE_BASE_URL}/rides/confirm`,
-        {
-          rideId: ride._id,
-        },
+        { rideId: ride._id },
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("captainToken")}`,
@@ -96,6 +110,7 @@ const CaptainHome = () => {
     }
   }
 
+  // 5. Animations
   useGSAP(
     function () {
       if (ridePopupPanel) {
@@ -128,6 +143,7 @@ const CaptainHome = () => {
 
   return (
     <div className="h-screen overflow-hidden relative">
+      {/* Header */}
       <div className="absolute p-6 top-0 flex items-center justify-between w-full z-10">
         <img
           className="w-16"
@@ -142,14 +158,17 @@ const CaptainHome = () => {
         </Link>
       </div>
 
+      {/* Map Background */}
       <div className="h-3/5 relative z-0">
         <LiveTracking />
       </div>
 
+      {/* Captain Details Panel */}
       <div className="h-2/5 p-6 bg-white rounded-t-3xl shadow-[0_-5px_15px_rgba(0,0,0,0.1)] relative z-10">
         <CaptainDetails />
       </div>
 
+      {/* Ride Request Popup (Slide Up) */}
       <div
         ref={ridePopupPanelRef}
         className="absolute w-full z-20 bottom-0 translate-y-full bg-white px-3 py-10 pt-12 rounded-t-3xl shadow-2xl"
@@ -162,6 +181,7 @@ const CaptainHome = () => {
         />
       </div>
 
+      {/* Confirm Ride Popup (Slide Up) */}
       <div
         ref={confirmRidePopupPanelRef}
         className="absolute w-full h-screen z-30 bottom-0 translate-y-full bg-white px-3 py-10 pt-12 rounded-t-3xl"

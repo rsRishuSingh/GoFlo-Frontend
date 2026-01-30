@@ -1,16 +1,64 @@
-import React, { useRef, useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import React, { useRef, useState, useEffect, useContext } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom"; // Added useNavigate
 import FinishRide from "../components/FinishRide";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
-import LiveTracking from "../components/LiveTracking";
+import LiveRouteTracking from "../components/LiveRouteTracking";
+import { SocketContext } from "../context/SocketContext";
+import { CaptainDataContext } from "../context/CaptainContext";
 
 const CaptainRiding = () => {
   const [finishRidePanel, setFinishRidePanel] = useState(false);
   const finishRidePanelRef = useRef(null);
   const location = useLocation();
-  const rideData = location.state?.ride;
+  const navigate = useNavigate(); // Hook to redirect if needed
+  const { socket } = useContext(SocketContext);
+  const { captain } = useContext(CaptainDataContext);
 
+  // 1. LAZY INITIALIZATION (The Fix)
+  // This ensures 'rideData' is loaded from storage immediately on refresh
+  const [rideData, setRideData] = useState(() => {
+    if (location.state?.ride) {
+      // If fresh navigation, save to storage
+      localStorage.setItem(
+        "captainCurrentRide",
+        JSON.stringify(location.state.ride),
+      );
+      return location.state.ride;
+    } else {
+      // If refresh, load from storage
+      const savedRide = localStorage.getItem("captainCurrentRide");
+      return savedRide ? JSON.parse(savedRide) : null;
+    }
+  });
+
+  // 2. LOCATION EMITTER
+  useEffect(() => {
+    if (!captain || !rideData) return;
+
+    const updateLocation = () => {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition((position) => {
+          socket.emit("update-location-captain", {
+            userId: captain._id,
+            location: {
+              ltd: position.coords.latitude,
+              lng: position.coords.longitude,
+            },
+            // This will now persist correctly after refresh
+            activeRideId: rideData._id,
+          });
+        });
+      }
+    };
+
+    const interval = setInterval(updateLocation, 4000);
+    updateLocation();
+
+    return () => clearInterval(interval);
+  }, [captain, socket, rideData]);
+
+  // 3. ANIMATIONS
   useGSAP(
     function () {
       if (finishRidePanel) {
@@ -26,9 +74,22 @@ const CaptainRiding = () => {
     [finishRidePanel],
   );
 
+  // Safety Loading State
+  if (!rideData) {
+    return (
+      <div className="h-screen flex items-center justify-center">
+        Loading Ride...
+      </div>
+    );
+  }
+
+  const destinationCoords = {
+    lat: rideData?.destination?.ltd || 28.6139,
+    lng: rideData?.destination?.lng || 77.209,
+  };
+
   return (
     <div className="h-screen relative w-full overflow-hidden">
-      {/* Header - Fixed Top */}
       <div className="fixed p-6 top-0 flex items-center justify-between w-full z-10">
         <img
           className="w-16"
@@ -43,12 +104,14 @@ const CaptainRiding = () => {
         </Link>
       </div>
 
-      {/* Map Section - 80% Height */}
       <div className="h-4/5 w-full relative z-0">
-        <LiveTracking />
+        <LiveRouteTracking
+          destination={destinationCoords}
+          isCaptain={true}
+          rideId={rideData._id} // Pass this so LiveRouteTracking knows the ID
+        />
       </div>
 
-      {/* Yellow Info Panel - 20% Height */}
       <div
         className="h-1/5 w-full p-6 flex items-center justify-between relative bg-yellow-400 pt-10 shadow-lg z-10"
         onClick={() => {
@@ -67,7 +130,6 @@ const CaptainRiding = () => {
         </button>
       </div>
 
-      {/* Finish Ride Sliding Panel */}
       <div
         ref={finishRidePanelRef}
         className="absolute w-full h-4/5 z-30 bottom-0 translate-y-full bg-white px-3 py-10 pt-12 rounded-t-3xl"

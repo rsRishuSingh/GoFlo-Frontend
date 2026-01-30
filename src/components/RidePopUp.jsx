@@ -27,7 +27,14 @@ const RidePopUp = (props) => {
               props.ride?.user?.fullname.lastname}
           </h2>
         </div>
-        <h5 className="text-lg font-semibold">2.2 KM</h5>
+        <div>
+          <h5 className="text-lg font-semibold">
+            {(props.ride?.distance / 1000).toFixed(1)} Km
+          </h5>
+          <h5 className="text-base font-medium text-gray-900">
+            {(props.ride?.duration / 60).toFixed(0)}<span className="text-sm">min</span>
+          </h5>
+        </div>
       </div>
 
       <div className="flex gap-2 justify-between flex-col items-center">
