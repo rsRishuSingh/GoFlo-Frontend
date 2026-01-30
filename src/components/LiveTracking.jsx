@@ -1,12 +1,11 @@
 import React, { useState, useEffect, useRef } from "react";
-import { GoogleMap, Marker } from "@react-google-maps/api"; // Remove LoadScript
+import { GoogleMap } from "@react-google-maps/api"; // ❌ Remove Marker import
 
 const containerStyle = {
   width: "100%",
   height: "100%",
   position: "relative",
   display: "flex",
-  // CSS Fix for "Passive Event Listener" warnings:
   touchAction: "none",
 };
 
@@ -16,33 +15,31 @@ const defaultCenter = {
 };
 
 const mapOptions = {
+  // 🔥 REQUIRED: Paste your Map ID here (from Google Cloud Console)
+  mapId: "a7b5a70fd5d7c6186ca9dba6",
+
   draggable: true,
-  scrollwheel: true,
-  zoomControl: true,
+  scrollwheel: false,
+  zoomControl: false,
   fullscreenControl: false,
   streetViewControl: false,
   mapTypeControl: false,
   gestureHandling: "greedy",
   disableDoubleClickZoom: false,
-  clickableIcons: true,
-  keyboardShortcuts: true,
-  // touchAction: "none" <-- Remove this from options, it belongs in containerStyle
-  styles: [
-    {
-      featureType: "poi",
-      elementType: "labels",
-      stylers: [{ visibility: "off" }],
-    },
-  ],
+  clickableIcons: false,
+  keyboardShortcuts: false,
+  disableDefaultUI: true,
+  
 };
 
 const LiveTracking = () => {
   const [currentPosition, setCurrentPosition] = useState(defaultCenter);
   const [map, setMap] = useState(null);
   const mapRef = useRef(null);
+  const markerRef = useRef(null); // Ref to hold the AdvancedMarkerElement
   const [isLocationLoaded, setIsLocationLoaded] = useState(false);
 
-  // Get user location on map load (user gesture)
+  // Get user location
   const getLocation = () => {
     if ("geolocation" in navigator) {
       navigator.geolocation.getCurrentPosition(
@@ -52,20 +49,16 @@ const LiveTracking = () => {
           setCurrentPosition(newPosition);
           setIsLocationLoaded(true);
 
-          if (mapRef.current) {
-            mapRef.current.setCenter(newPosition);
-            mapRef.current.setZoom(17);
+          if (map) {
+            map.setCenter(newPosition);
+            map.setZoom(17);
           }
         },
         (error) => {
           console.warn("Geolocation error:", error);
           setIsLocationLoaded(true);
         },
-        {
-          enableHighAccuracy: true,
-          timeout: 15000,
-          maximumAge: 0,
-        },
+        { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 },
       );
     }
   };
@@ -79,12 +72,31 @@ const LiveTracking = () => {
     }, 100);
 
     getLocation();
-
-    if (isLocationLoaded) {
-      mapInstance.setCenter(currentPosition);
-      mapInstance.setZoom(17);
-    }
   };
+
+  // --- NEW: Handle Advanced Marker ---
+  useEffect(() => {
+    if (map && currentPosition && window.google) {
+      // 1. Clean up old marker if it exists
+      if (markerRef.current) {
+        markerRef.current.map = null;
+      }
+
+      // 2. Create new AdvancedMarkerElement
+      const { AdvancedMarkerElement } = window.google.maps.marker;
+
+      markerRef.current = new AdvancedMarkerElement({
+        map,
+        position: currentPosition,
+        title: "Your Location",
+      });
+    }
+
+    // Cleanup on unmount
+    return () => {
+      if (markerRef.current) markerRef.current.map = null;
+    };
+  }, [map, currentPosition]);
 
   useEffect(() => {
     if (mapRef.current && isLocationLoaded && currentPosition) {
@@ -94,7 +106,6 @@ const LiveTracking = () => {
   }, [isLocationLoaded, currentPosition]);
 
   return (
-    // Removed <LoadScript> wrapper (it is now in App.jsx)
     <GoogleMap
       mapContainerStyle={containerStyle}
       center={currentPosition}
@@ -102,7 +113,7 @@ const LiveTracking = () => {
       onLoad={handleMapLoad}
       options={mapOptions}
     >
-      <Marker position={currentPosition} />
+      {/* ❌ Removed <Marker /> Component */}
     </GoogleMap>
   );
 };

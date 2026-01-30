@@ -27,26 +27,7 @@ const CaptainHome = () => {
       userType: "captain",
     });
 
-    useEffect(() => {
-      const refreshToken = async () => {
-        try {
-          const response = await axios.post(
-            `${import.meta.env.VITE_BASE_URL}/captains/refresh-token`,
-            {},
-            {
-              withCredentials: true, 
-            },
-          );
-          localStorage.setItem("captainToken", response.data.captainToken);
-        } catch (err) {
-          console.error("Session expired, please login again");
-          navigate("/captain-login");
-        }
-      };
-      refreshToken();
-      const interval = setInterval(refreshToken, 50 * 60 * 1000);
-      return () => clearInterval(interval);
-    }, []);
+    
 
     const updateLocation = () => {
       if (navigator.geolocation) {
@@ -67,6 +48,24 @@ const CaptainHome = () => {
 
     return () => clearInterval(locationInterval);
   }, [captain, socket]);
+
+  useEffect(() => {
+    const refreshToken = async () => {
+      try {
+        const response = await axios.post(
+          `${import.meta.env.VITE_BASE_URL}/captains/refresh-token`,
+          {},
+          { withCredentials: true },
+        );
+        localStorage.setItem("captainToken", response.data.captainToken);
+      } catch (err) {
+        console.error("Session expired, please login again");
+        navigate("/captain-login");
+      }
+    };
+    const interval = setInterval(refreshToken, 50 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   socket.on("new-ride", (data) => {
     console.log("New ride received:", data);
@@ -136,7 +135,7 @@ const CaptainHome = () => {
           alt="Uber Logo"
         />
         <Link
-          to="/captain-home"
+          to="/captain-logout"
           className="h-10 w-10 bg-white flex items-center justify-center rounded-full shadow-md"
         >
           <i className="text-lg font-medium ri-logout-box-r-line"></i>
