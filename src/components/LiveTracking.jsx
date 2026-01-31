@@ -9,14 +9,9 @@ const containerStyle = {
   touchAction: "none",
 };
 
-const defaultCenter = {
-  lat: 28.6139,
-  lng: 77.209,
-};
-
 const mapOptions = {
-  // 🔥 REQUIRED: Paste your Map ID here (from Google Cloud Console)
-  mapId: "a7b5a70fd5d7c6186ca9dba6",
+  //  your Map ID here (from Google Cloud Console)
+  mapId: `${import.meta.env.VITE_GOOGLE_MAPS_ID}`,
 
   draggable: true,
   scrollwheel: false,
@@ -29,11 +24,10 @@ const mapOptions = {
   clickableIcons: false,
   keyboardShortcuts: false,
   disableDefaultUI: true,
-  
 };
 
 const LiveTracking = () => {
-  const [currentPosition, setCurrentPosition] = useState(defaultCenter);
+  const [currentPosition, setCurrentPosition] = useState(null);
   const [map, setMap] = useState(null);
   const mapRef = useRef(null);
   const markerRef = useRef(null); // Ref to hold the AdvancedMarkerElement
@@ -113,7 +107,6 @@ const LiveTracking = () => {
       onLoad={handleMapLoad}
       options={mapOptions}
     >
-      {/* ❌ Removed <Marker /> Component */}
     </GoogleMap>
   );
 };

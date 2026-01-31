@@ -32,7 +32,8 @@ const RidePopUp = (props) => {
             {(props.ride?.distance / 1000).toFixed(1)} Km
           </h5>
           <h5 className="text-base font-medium text-gray-900">
-            {(props.ride?.duration / 60).toFixed(0)}<span className="text-sm">min</span>
+            {(props.ride?.duration / 60).toFixed(0)}
+            <span className="text-sm">min</span>
           </h5>
         </div>
       </div>
@@ -44,7 +45,6 @@ const RidePopUp = (props) => {
             <div>
               <h3 className="text-lg font-medium">Pickup</h3>
               <p className="text-sm -mt-1 text-gray-600">
-                {/* CHANGED: Accessing origin.location_name */}
                 {props.ride?.origin?.location_name}
               </p>
             </div>
@@ -54,7 +54,6 @@ const RidePopUp = (props) => {
             <div>
               <h3 className="text-lg font-medium">Destination</h3>
               <p className="text-sm -mt-1 text-gray-600">
-                {/* CHANGED: Accessing destination.location_name */}
                 {props.ride?.destination?.location_name}
               </p>
             </div>
@@ -72,7 +71,7 @@ const RidePopUp = (props) => {
           <button
             onClick={() => {
               props.setConfirmRidePopupPanel(true);
-              props.confirmRide();
+              props.confirmRide(); // This triggers the POST /rides/confirm
             }}
             className="bg-green-600 w-full text-white font-semibold p-3 rounded-lg shadow-md hover:bg-green-700 transition"
           >

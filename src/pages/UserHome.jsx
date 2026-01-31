@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, useContext } from "react";
+import React, { useEffect, useRef, useState, useContext, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
@@ -67,6 +67,28 @@ const UserHome = () => {
     });
   };
 
+  // --- API Handlers ---
+
+  // Cancel Ride Handler
+  const cancelRide = async () => {
+    if (!ride?._id) return;
+    try {
+      await axios.post(
+        `${import.meta.env.VITE_BASE_URL}/rides/cancel`,
+        { rideId: ride._id },
+        { headers: getAuthHeaders() },
+      );
+      // Reset States
+      setVehicleFound(false);
+      setWaitingForDriver(false);
+      setRide(null);
+      setPanelOpen(false);
+    } catch (error) {
+      console.error("Error cancelling ride:", error);
+      alert("Failed to cancel ride");
+    }
+  };
+
   // --- Side Effects ---
 
   // 1. Socket Connection & Events
@@ -103,31 +125,78 @@ const UserHome = () => {
     }
   }, [waitingForDriver, ride, socket]);
 
-  // 3. POLLING FOR LIVE UPDATES (The Fix)
-  // This fetches the Captain's latest location while you wait.
+  // 3. POLLING: Waiting for Driver (Live Location & Status)
   useEffect(() => {
     if (waitingForDriver && ride?._id) {
       const fetchRideStatus = async () => {
         try {
           const response = await axios.get(
-            `${import.meta.env.VITE_BASE_URL}/rides/${ride._id}`,
+            `${import.meta.env.VITE_BASE_URL}/rides/users/${ride._id}`,
             { headers: getAuthHeaders() },
           );
-          // Update ride state to reflect new captain location
+
+          // FIX: Check if ride has started (fallback if socket event missed)
+          if (response.data.status === "ongoing") {
+            setWaitingForDriver(false);
+            navigate("/user-riding", { state: { ride: response.data } });
+            return;
+          }
+
+          // Check for cancellation by Captain
+          if (response.data.status === "cancelled") {
+            setWaitingForDriver(false);
+            setVehicleFound(false);
+            setRide(null);
+            alert("Your ride was cancelled by the captain.");
+            return;
+          }
+
           setRide(response.data);
         } catch (err) {
           console.error("Error polling ride status:", err);
         }
       };
 
-      const interval = setInterval(fetchRideStatus, 4000); // Poll every 4 seconds
-      fetchRideStatus(); // Initial fetch
+      // Poll every 4 seconds
+      const interval = setInterval(fetchRideStatus, 4000);
+      fetchRideStatus(); // Initial call
 
       return () => clearInterval(interval);
     }
-  }, [waitingForDriver, ride?._id]);
+  }, [waitingForDriver, ride?._id, navigate]);
 
-  // 4. Token Refresh Interval
+  // 4. POLLING: Looking for Driver (Waiting for Accept)
+  useEffect(() => {
+    if (vehicleFound && ride?._id) {
+      const checkAcceptance = async () => {
+        try {
+          const response = await axios.get(
+            `${import.meta.env.VITE_BASE_URL}/rides/users/${ride._id}`,
+            { headers: getAuthHeaders() },
+          );
+
+          if (response.data.status === "accepted") {
+            setVehicleFound(false);
+            setWaitingForDriver(true);
+            setRide(response.data);
+          }
+
+          if (response.data.status === "cancelled") {
+            setVehicleFound(false);
+            setRide(null);
+            alert("Ride request cancelled.");
+          }
+        } catch (err) {
+          console.error("Error polling acceptance:", err);
+        }
+      };
+
+      const interval = setInterval(checkAcceptance, 4000);
+      return () => clearInterval(interval);
+    }
+  }, [vehicleFound, ride?._id]);
+
+  // 5. Token Refresh Interval
   useEffect(() => {
     const refreshToken = async () => {
       try {
@@ -136,7 +205,7 @@ const UserHome = () => {
           {},
           { withCredentials: true },
         );
-        localStorage.setItem("userToken", response.data.token);
+        localStorage.setItem("userToken", response.data.userToken);
       } catch (err) {
         console.error("Session expired, please login again");
         navigate("/user-login");
@@ -146,7 +215,7 @@ const UserHome = () => {
     return () => clearInterval(interval);
   }, [navigate]);
 
-  // --- API Handlers ---
+  // --- Suggestions & Geocoding Handlers ---
   const fetchSuggestions = async (input) => {
     try {
       const response = await axios.get(
@@ -221,7 +290,7 @@ const UserHome = () => {
     }
 
     try {
-      await axios.post(
+      const response = await axios.post(
         `${import.meta.env.VITE_BASE_URL}/rides/create`,
         {
           origin: rideCoordinates.origin,
@@ -230,6 +299,10 @@ const UserHome = () => {
         },
         { headers: getAuthHeaders() },
       );
+
+      setRide(response.data);
+      setVehicleFound(true);
+      setConfirmRidePanel(false);
     } catch (error) {
       console.error("Error creating ride:", error);
       alert("Error creating ride. Please try again.");
@@ -263,7 +336,6 @@ const UserHome = () => {
     try {
       const position = await getCurrentPosition();
       const { latitude, longitude } = position.coords;
-
       const hospitalResponse = await axios.get(
         `${import.meta.env.VITE_BASE_URL}/maps/get-nearest-hospital`,
         {
@@ -272,16 +344,12 @@ const UserHome = () => {
         },
       );
       const hospital = hospitalResponse.data;
-
       const location_name = await getAddressFromCoordinates(
         latitude,
         longitude,
       );
-      const originData = {
-        location_name,
-        ltd: latitude,
-        lng: longitude,
-      };
+
+      const originData = { location_name, ltd: latitude, lng: longitude };
 
       const rideResponse = await axios.post(
         `${import.meta.env.VITE_BASE_URL}/rides/create`,
@@ -299,6 +367,8 @@ const UserHome = () => {
         setDestination(hospital.location_name);
         setVehicleType("car");
         setFare({ car: rideResponse.data.fare });
+
+        setRide(rideResponse.data);
         setVehicleFound(true);
         setPanelOpen(false);
         setVehiclePanel(false);
@@ -341,13 +411,22 @@ const UserHome = () => {
     [waitingForDriver],
   );
 
-  // Extract Captain's Live Location from the Polled Data
   const captainLocation = ride?.captain?.location?.coordinates
     ? {
         lat: ride.captain.location.coordinates[1],
         lng: ride.captain.location.coordinates[0],
       }
     : null;
+
+  const mapDestination = useMemo(() => {
+    if (ride && ride.origin) {
+      return {
+        lat: ride.origin.ltd,
+        lng: ride.origin.lng,
+      };
+    }
+    return null;
+  }, [ride?.origin?.ltd, ride?.origin?.lng]);
 
   return (
     <div className="h-screen relative w-full overflow-hidden">
@@ -359,15 +438,12 @@ const UserHome = () => {
 
       <div className="h-[70%] w-full z-0">
         {/* CONDITIONALLY RENDER MAPS */}
-        {waitingForDriver && ride ? (
+        {waitingForDriver && ride && mapDestination ? (
           <LiveRouteTracking
-            destination={{
-              lat: ride.origin.ltd,
-              lng: ride.origin.lng,
-            }}
+            destination={mapDestination}
             isCaptain={false}
             rideId={ride._id}
-            captainLocation={captainLocation} // Pass live coordinates
+            captainLocation={captainLocation}
           />
         ) : (
           <LiveTracking />
@@ -391,7 +467,6 @@ const UserHome = () => {
         <i className="ri-crosshair-fill text-xl text-gray-700"></i>
       </button>
 
-      {/* --- FLOATING PANELS --- */}
       <div
         ref={panelWrapperRef}
         className="flex flex-col h-[30%] absolute bottom-0 w-full z-10 bg-white"
@@ -404,9 +479,7 @@ const UserHome = () => {
           >
             <i className="ri-arrow-down-wide-line"></i>
           </h5>
-
           <h4 className="text-2xl font-semibold">Find a trip</h4>
-
           <form className="relative py-3" onSubmit={(e) => e.preventDefault()}>
             <div className="absolute h-16 w-1 top-1/2 -translate-y-1/2 left-5 bg-gray-700 rounded-full" />
             <input
@@ -430,7 +503,6 @@ const UserHome = () => {
               placeholder="Enter your destination"
             />
           </form>
-
           <button
             onClick={findTrip}
             className="bg-black text-white px-4 py-2 rounded-lg w-full cursor-pointer"
@@ -438,7 +510,6 @@ const UserHome = () => {
             Find Trip
           </button>
         </div>
-
         <div ref={panelRef} className="bg-white h-0 overflow-hidden">
           <LocationSearchPanel
             suggestions={
@@ -455,7 +526,6 @@ const UserHome = () => {
         </div>
       </div>
 
-      {/* ---------- FIXED PANELS WRAPPER ---------- */}
       {[
         [
           vehiclePanelRef,
@@ -486,6 +556,8 @@ const UserHome = () => {
             fare={fare}
             vehicleType={vehicleType}
             setVehicleFound={setVehicleFound}
+            // PASS CANCEL FUNCTION
+            cancelRide={cancelRide}
           />,
         ],
         [
@@ -495,6 +567,8 @@ const UserHome = () => {
             setVehicleFound={setVehicleFound}
             setWaitingForDriver={setWaitingForDriver}
             waitingForDriver={waitingForDriver}
+            // PASS CANCEL FUNCTION
+            cancelRide={cancelRide}
           />,
         ],
       ].map(([ref, Component], idx) => (

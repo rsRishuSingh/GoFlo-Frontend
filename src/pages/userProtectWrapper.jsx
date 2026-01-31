@@ -1,45 +1,82 @@
-import React, { useContext, useEffect, useState } from 'react'
-import { UserDataContext } from '../context/UserContext'
-import { useNavigate } from 'react-router-dom'
-import axios from 'axios'
+import React, { useContext, useEffect, useState } from "react";
+import { UserDataContext } from "../context/UserContext";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
 const UserProtectWrapper = ({ children }) => {
-    const userToken = localStorage.getItem('userToken')
-    const navigate = useNavigate()
-    const { setUser } = useContext(UserDataContext)
-    const [isLoading, setIsLoading] = useState(true)
+  const { user, setUser } = useContext(UserDataContext);
+  const [isLoading, setIsLoading] = useState(true);
+  const navigate = useNavigate();
 
-    useEffect(() => {
-        if (!userToken) {
-            navigate('/user-login')
-            return 
+  useEffect(() => {
+    const checkAuth = async () => {
+      const token = localStorage.getItem("userToken");
+
+      if (!token) {
+        navigate("/user-login");
+        return;
+      }
+
+      try {
+        const response = await axios.get(
+          `${import.meta.env.VITE_BASE_URL}/users/profile`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          },
+        );
+
+        if (response.status === 200) {
+          setUser(response.data);
+          setIsLoading(false);
         }
+      } catch (err) {
+        console.log("Initial Token Failed. Attempting Refresh...", err);
 
-        const fetchUserProfile = async () => {
-            try {
-                const response = await axios.get(`${import.meta.env.VITE_BASE_URL}/users/profile`, {
-                    headers: { Authorization: `Bearer ${userToken}` }
-                })
-                
-                if (response.status === 200) {
-                    setUser(response.data.user)
-                    setIsLoading(false)
-                }
-            } catch (err) {
-                console.error("Session expired or invalid")
-                localStorage.removeItem('userToken')
-                navigate('/user-login')
+        if (err.response && err.response.status === 401) {
+          try {
+            const refreshResponse = await axios.post(
+              `${import.meta.env.VITE_BASE_URL}/users/refresh-token`,
+              {},
+              { withCredentials: true },
+            );
+
+            if (refreshResponse.status === 200) {
+              
+
+              localStorage.setItem("userToken", refreshResponse.data.userToken);
+
+              const retryResponse = await axios.get(
+                `${import.meta.env.VITE_BASE_URL}/users/profile`,
+                {
+                  headers: { Authorization: `Bearer ${newAccessToken}` },
+                },
+              );
+
+              setUser(retryResponse.data);
+              setIsLoading(false);
             }
+          } catch (refreshError) {
+            console.error(
+              "Refresh failed. Redirecting to login.",
+              refreshError,
+            );
+            localStorage.removeItem("userToken");
+            navigate("/user-login");
+          }
+        } else {
+          navigate("/user-login");
         }
+      }
+    };
 
-        fetchUserProfile()
-    }, [userToken, navigate, setUser])
+    checkAuth();
+  }, [navigate, setUser]);
 
-    if (isLoading) {
-        return <div className="h-screen flex items-center justify-center">Loading...</div>
-    }
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
 
-    return <>{children}</>
-}
+  return <>{children}</>;
+};
 
 export default UserProtectWrapper;

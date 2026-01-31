@@ -2,7 +2,7 @@ import React, { useRef, useState, useEffect, useContext } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { SocketContext } from "../context/SocketContext";
 import LiveRouteTracking from "../components/LiveRouteTracking";
-import axios from "axios"; // Ensure axios is imported
+import axios from "axios";
 
 const UserRiding = () => {
   const [payMessage, setPayMessage] = useState("Pay via Coupon");
@@ -21,17 +21,14 @@ const UserRiding = () => {
     }
   });
 
-  // 2. ROBUST POLLING MECHANISM (The Alternative Fix)
-  // Instead of relying on sockets (which break on refresh), we fetch the
-  // latest ride data from the DB every 4 seconds.
+  // 2. POLLING MECHANISM
   useEffect(() => {
     if (!ride?._id) return;
 
     const fetchRideUpdate = async () => {
       try {
-        // This endpoint returns the ride AND the captain's latest location (via populate)
         const response = await axios.get(
-          `${import.meta.env.VITE_BASE_URL}/rides/${ride._id}`,
+          `${import.meta.env.VITE_BASE_URL}/rides/users/${ride._id}`,
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("userToken")}`,
@@ -40,7 +37,15 @@ const UserRiding = () => {
         );
 
         const updatedRide = response.data;
-        setRide(updatedRide); // Update state with new location/status
+
+        // UPDATED: Handle Cancellation by Captain
+        if (updatedRide.status === "cancelled") {
+          localStorage.removeItem("currentRide");
+          navigate("/user-home");
+          return;
+        }
+
+        setRide(updatedRide);
 
         // Check if ride is finished
         if (updatedRide.status === "completed") {
@@ -52,22 +57,41 @@ const UserRiding = () => {
       }
     };
 
-    // Poll every 4 seconds
     const intervalId = setInterval(fetchRideUpdate, 4000);
-
-    // Initial fetch to sync immediately on load
     fetchRideUpdate();
 
     return () => clearInterval(intervalId);
   }, [ride?._id, navigate]);
 
-  // 3. Keep Socket for "Events" (Optional Backup)
-  // We still emit join-ride just in case, but we don't depend on it for location anymore.
+  // 3. Socket Backup
   useEffect(() => {
     if (socket && ride?._id) {
       socket.emit("join-ride", { rideId: ride._id });
     }
   }, [socket, ride]);
+
+  // NEW: CANCEL RIDE FUNCTION (User cancels mid-ride)
+  const cancelRide = async () => {
+    if (!window.confirm("Are you sure you want to cancel this active ride?"))
+      return;
+
+    try {
+      await axios.post(
+        `${import.meta.env.VITE_BASE_URL}/rides/cancel`,
+        { rideId: ride._id },
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("userToken")}`,
+          },
+        },
+      );
+      localStorage.removeItem("currentRide");
+      navigate("/user-home");
+    } catch (error) {
+      console.error("Error cancelling ride:", error);
+      alert("Could not cancel ride");
+    }
+  };
 
   if (!ride) {
     navigate("/user-home");
@@ -79,16 +103,12 @@ const UserRiding = () => {
   }
 
   // 4. Extract Location Logic
-  // The polling updates 'ride', which contains 'captain.location'.
-  // We pass this live location to the map component.
-
-  // NOTE: Ensure your captain model has location.coordinates format correct
   const captainLocation = ride.captain?.location?.coordinates
     ? {
         lat: ride.captain.location.coordinates[1],
         lng: ride.captain.location.coordinates[0],
       }
-    : null; // Fallback if location missing
+    : null;
 
   const destinationCoords = {
     lat: ride?.destination?.ltd || 28.6139,
@@ -107,17 +127,16 @@ const UserRiding = () => {
         </svg>
       </button>
 
-      <div className="h-1/2">
+      <div className="h-3/5">
         <LiveRouteTracking
           destination={destinationCoords}
           isCaptain={false}
           rideId={ride._id}
-          // Pass the polled location directly to the map
           captainLocation={captainLocation}
         />
       </div>
 
-      <div className="h-1/2 p-4">
+      <div className="h-2/5 p-4">
         <div className="flex items-center justify-between">
           <img
             className="h-12"
@@ -158,12 +177,24 @@ const UserRiding = () => {
             </div>
           </div>
         </div>
-        <button
-          className="w-full mt-5 bg-green-600 text-white font-semibold p-2 rounded-lg"
-          onClick={() => setPayMessage("Paid via Coupon")}
-        >
-          {payMessage}
-        </button>
+
+        {/* ACTION BUTTONS */}
+        <div className="flex gap-2 mt-5">
+          <button
+            className="flex-1 bg-green-600 text-white font-semibold p-2 rounded-lg"
+            onClick={() => setPayMessage("Paid via Coupon")}
+          >
+            {payMessage}
+          </button>
+
+          {/* NEW: Cancel Button */}
+          <button
+            className="flex-1 bg-red-600 text-white font-semibold p-2 rounded-lg"
+            onClick={cancelRide}
+          >
+            Cancel Ride
+          </button>
+        </div>
       </div>
     </div>
   );
