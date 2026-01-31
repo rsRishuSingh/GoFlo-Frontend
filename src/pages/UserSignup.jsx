@@ -83,7 +83,7 @@ const UserSignup = () => {
           <h5 className="text-4xl font-bold my-10 text-center text-[#262626] ">
             Ride with GoFlo
           </h5>
-          <h3 className="text-base font-medium m1-2">What's your name</h3>
+          <h3 className="text-base font-medium mb-2">What's your name</h3>
           <div className="flex gap-4">
             <div className="w-1/2">
               <input
@@ -118,7 +118,7 @@ const UserSignup = () => {
             </div>
           </div>
 
-          <h3 className="text-base font-medium m1-2">What's your email</h3>
+          <h3 className="text-base font-medium mb-1">What's your email</h3>
           <input
             type="email"
             required
@@ -132,11 +132,11 @@ const UserSignup = () => {
           />
           <div className="min-h-6.25 ">
             {errors.email && (
-              <p className="text-red-500 text-sm mt-1">{errors.email}</p>
+              <p className="text-red-500 text-sm">{errors.email}</p>
             )}
           </div>
 
-          <h3 className="text-base font-medium mb-2">Enter Password</h3>
+          <h3 className="text-base font-medium mb-1">Enter Password</h3>
           <input
             type="password"
             required
@@ -150,7 +150,7 @@ const UserSignup = () => {
           />
           <div className="min-h-6.25 ">
             {errors.password && (
-              <p className="text-red-500 text-sm mt-1">{errors.password}</p>
+              <p className="text-red-500 text-sm ">{errors.password}</p>
             )}
           </div>
 

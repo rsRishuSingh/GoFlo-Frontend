@@ -72,16 +72,19 @@ const CaptainSignup = () => {
   };
 
   return (
-    <div className="py-5 px-5 h-screen flex flex-col justify-between bg-[#a4ff4fec]">
+    <div className="py-5 px-5 h-screen flex flex-col justify-between ">
       <div>
         <img
-          className="w-28 mb-3"
+          className="w-24 mb-5"
           src="https://upload.wikimedia.org/wikipedia/en/thumb/0/0f/Ola_Cabs_logo.svg/1280px-Ola_Cabs_logo.svg.png"
-          alt="Captain Logo"
+          alt="Ola Logo"
         />
 
         <form onSubmit={submitHandler}>
-          <h4 className="text-lg text-gray-700 font-medium mb-2">
+          <h5 className="text-4xl font-bold my-10 text-center text-[#262626] ">
+            Drive with GoFlo
+          </h5>
+          <h4 className="text-base font-medium mb-1">
             What's our Captain's name
           </h4>
           <div className="flex gap-4">
@@ -92,9 +95,9 @@ const CaptainSignup = () => {
                 placeholder="First name"
                 value={firstName}
                 onChange={(e) => setFirstName(e.target.value)}
-                className="bg-[#ffffff] w-full rounded-2xl px-4 py-2 border-none text-lg placeholder:text-base"
+                className=" w-full rounded-lg px-4 py-2 border-2 text-base placeholder:text-base"
               />
-              <div className="min-h-5 mb-1">
+              <div className="min-h-5 ">
                 {errors.firstName && (
                   <p className="text-red-600 text-xs px-2">
                     {errors.firstName}
@@ -109,39 +112,36 @@ const CaptainSignup = () => {
                 placeholder="Last name"
                 value={lastName}
                 onChange={(e) => setLastName(e.target.value)}
-                className="bg-[#ffffff] w-full rounded-2xl px-4 py-2 border-none text-lg placeholder:text-base"
+                className="bg-[#ffffff] w-full rounded-lg px-4 py-2 border-2 text-base placeholder:text-base"
               />
-              <div className="min-h-5 mb-1"></div>
+              <div className="min-h-5 "></div>
             </div>
           </div>
-
-          <h4 className="text-lg text-gray-700 font-medium mb-1">
-            Captain's Email
-          </h4>
+          <h3 className="text-base font-medium mb-1">What's your email</h3>
           <input
             type="email"
             required
             placeholder="email@example.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="bg-[#ffffff] rounded-2xl px-4 py-2 border-none w-full text-lg placeholder:text-base"
+            className="rounded-2xl px-4 py-2 border-2 w-full text-base placeholder:text-base"
           />
-          <div className="min-h-5 mb-1">
+          <div className="min-h-5 ">
             {errors.email && (
               <p className="text-red-600 text-xs px-2">{errors.email}</p>
             )}
           </div>
 
-          <h4 className="text-lg text-gray-700 font-medium mb-1">Password</h4>
+          <h3 className="text-base font-medium mb-1">Enter Password</h3>
           <input
             type="password"
             required
             placeholder="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="bg-[#ffffff] rounded-2xl px-4 py-2 border-none w-full text-lg placeholder:text-base"
+            className=" rounded-2xl px-4 py-2 border-2 w-full text-base placeholder:text-base"
           />
-          <div className="min-h-5 mb-1">
+          <div className="min-h-5">
             {errors.password && (
               <p className="text-red-600 text-xs px-2">{errors.password}</p>
             )}
@@ -158,9 +158,9 @@ const CaptainSignup = () => {
                 placeholder="Vehicle Color"
                 value={vehicleColor}
                 onChange={(e) => setVehicleColor(e.target.value)}
-                className="bg-[#ffffff] w-full rounded-2xl px-4 py-2 border-none text-lg placeholder:text-base"
+                className=" rounded-2xl px-4 py-2 border-2 w-full text-base placeholder:text-base"
               />
-              <div className="min-h-5 mb-1">
+              <div className="min-h-5">
                 {errors.vehicleColor && (
                   <p className="text-red-600 text-xs px-2">
                     {errors.vehicleColor}
@@ -175,9 +175,9 @@ const CaptainSignup = () => {
                 placeholder="Vehicle Plate"
                 value={vehiclePlate}
                 onChange={(e) => setVehiclePlate(e.target.value)}
-                className="bg-[#ffffff] w-full rounded-2xl px-4 py-2 border-none text-lg placeholder:text-base"
+                className=" rounded-2xl px-4 py-2 border-2 w-full text-base placeholder:text-base"
               />
-              <div className="min-h-5 mb-1">
+              <div className="min-h-5">
                 {errors.vehiclePlate && (
                   <p className="text-red-600 text-xs px-2">
                     {errors.vehiclePlate}
@@ -197,7 +197,7 @@ const CaptainSignup = () => {
                   if (errors.vehicleCapacity)
                     setErrors({ ...errors, vehicleCapacity: "" });
                 }}
-                className="bg-[#ffffff] w-full rounded-2xl px-4 py-2 border-none text-lg text-gray-700"
+                className=" rounded-2xl px-4 py-2 border-2 w-full text-base placeholder:text-base"
               >
                 <option value="" disabled>
                   Capacity
@@ -207,7 +207,7 @@ const CaptainSignup = () => {
                 <option value="3">3</option>
                 <option value="4">4</option>
               </select>
-              <div className="min-h-5 mb-1">
+              <div className="min-h-5 ">
                 {errors.vehicleCapacity && (
                   <p className="text-red-600 text-xs px-2">
                     {errors.vehicleCapacity}
@@ -220,7 +220,7 @@ const CaptainSignup = () => {
                 required
                 value={vehicleType}
                 onChange={(e) => setVehicleType(e.target.value)}
-                className="bg-[#ffffff] w-full rounded-2xl px-4 py-2 border-none text-lg text-gray-700"
+                className=" rounded-2xl px-4 py-2 border-2 w-full text-base placeholder:text-base"
               >
                 <option value="" disabled>
                   Type
@@ -229,7 +229,7 @@ const CaptainSignup = () => {
                 <option value="auto">Auto</option>
                 <option value="moto">Bike</option>
               </select>
-              <div className="min-h-5 mb-1">
+              <div className="min-h-5 ">
                 {errors.vehicleType && (
                   <p className="text-red-600 text-xs px-2">
                     {errors.vehicleType}
@@ -241,7 +241,7 @@ const CaptainSignup = () => {
 
           <button
             type="submit"
-            className="bg-[#098bf5] text-white font-semibold mt-2 rounded-2xl px-4 py-2 w-full text-lg"
+            className="bg-[#098bf5] text-white font-semibold mb-3 rounded-4xl px-4 py-2 w-full text-lg active:scale-95 transition-transform"
           >
             Create Captain Account
           </button>
@@ -249,7 +249,7 @@ const CaptainSignup = () => {
 
         <p className="text-center text-[15px] font-medium mt-3 mb-4">
           <span className="text-gray-700">Already have an account? </span>
-          <Link to="/captain-login" className="text-blue-600 font-bold">
+          <Link to="/captain-login" className="text-blue-500 font-bold">
             Login here
           </Link>
         </p>

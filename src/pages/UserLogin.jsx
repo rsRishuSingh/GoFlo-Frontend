@@ -131,7 +131,7 @@ const UserLogin = () => {
       <div>
         <Link
           to="/captain-login"
-          className="bg-[#098bf5] flex items-center justify-center text-white font-semibold mb-2 rounded-4xl px-4 py-2 w-full text-lg"
+          className="flex items-center justify-center bg-[#098bf5] text-white font-semibold mb-3 rounded-4xl px-4 py-2 w-full text-lg active:scale-95 transition-transform"
         >
           Sign in as Driver
         </Link>

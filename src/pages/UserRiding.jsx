@@ -1,14 +1,25 @@
 import React, { useRef, useState, useEffect, useContext } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { SocketContext } from "../context/SocketContext";
 import LiveRouteTracking from "../components/LiveRouteTracking";
 import axios from "axios";
+import { useGSAP } from "@gsap/react";
+import gsap from "gsap";
 
 const UserRiding = () => {
-  const [payMessage, setPayMessage] = useState("Pay via Coupon");
+  const [isPaymentPanelOpen, setIsPaymentPanelOpen] = useState(false);
+  const paymentPanelRef = useRef(null);
+
   const location = useLocation();
   const navigate = useNavigate();
   const { socket } = useContext(SocketContext);
+
+  // Vehicle Images Map
+  const vehicleImages = {
+    car: "/olaCar.png",
+    moto: "/olaBike.png",
+    auto: "/olaAuto.png",
+  };
 
   // 1. Load Initial Ride Data
   const [ride, setRide] = useState(() => {
@@ -20,6 +31,10 @@ const UserRiding = () => {
       return savedRide ? JSON.parse(savedRide) : null;
     }
   });
+
+  // Get Vehicle Image safely
+  const vehicleType = ride?.captain?.vehicleDetails?.vehicleType || "car";
+  const vehicleImageSrc = vehicleImages[vehicleType] || vehicleImages["car"];
 
   // 2. POLLING MECHANISM
   useEffect(() => {
@@ -38,7 +53,6 @@ const UserRiding = () => {
 
         const updatedRide = response.data;
 
-        // UPDATED: Handle Cancellation by Captain
         if (updatedRide.status === "cancelled") {
           localStorage.removeItem("currentRide");
           navigate("/user-home");
@@ -47,10 +61,9 @@ const UserRiding = () => {
 
         setRide(updatedRide);
 
-        // Check if ride is finished
         if (updatedRide.status === "completed") {
           localStorage.removeItem("currentRide");
-          navigate("/user-home");
+          navigate("/user-home"); // Or to a rating screen
         }
       } catch (error) {
         console.error("Error fetching ride update:", error);
@@ -70,7 +83,7 @@ const UserRiding = () => {
     }
   }, [socket, ride]);
 
-  // NEW: CANCEL RIDE FUNCTION (User cancels mid-ride)
+  // CANCEL RIDE FUNCTION
   const cancelRide = async () => {
     if (!window.confirm("Are you sure you want to cancel this active ride?"))
       return;
@@ -92,6 +105,15 @@ const UserRiding = () => {
       alert("Could not cancel ride");
     }
   };
+
+  // GSAP Animation for Payment Panel
+  useGSAP(() => {
+    if (isPaymentPanelOpen) {
+      gsap.to(paymentPanelRef.current, { y: "0%" });
+    } else {
+      gsap.to(paymentPanelRef.current, { y: "100%" });
+    }
+  }, [isPaymentPanelOpen]);
 
   if (!ride) {
     navigate("/user-home");
@@ -116,18 +138,15 @@ const UserRiding = () => {
   };
 
   return (
-    <div className="h-screen relative">
-      <button className="absolute right-2 top-2 h-10 w-10 bg-white p-2 flex items-center justify-center rounded-full shadow-md z-10">
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 24 24"
-          fill="rgba(255,0,0,1)"
-        >
-          <path d="M22 17.0022C21.999 19.8731 19.9816 22.2726 17.2872 22.8616L16.6492 20.9476C17.8532 20.7511 18.8765 20.0171 19.4649 19H17C15.8954 19 15 18.1046 15 17V13C15 11.8954 15.8954 11 17 11H19.9381C19.446 7.05369 16.0796 4 12 4C7.92038 4 4.55399 7.05369 4.06189 11H7C8.10457 11 9 11.8954 9 13V17C9 18.1046 8.10457 19 7 19H4C2.89543 19 2 18.1046 2 17V12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12V12.9987V13V17V17.0013V17.0022Z"></path>
-        </svg>
+    <div className="h-screen relative overflow-hidden">
+      <button
+        onClick={() => navigate("/user-home")}
+        className="absolute right-4 top-4 h-10 w-10 bg-white p-2 flex items-center justify-center rounded-full shadow-md z-10 cursor-pointer hover:bg-gray-100 transition"
+      >
+        <i className="ri-home-5-line text-lg font-bold text-green-600"></i>
       </button>
 
-      <div className="h-3/5">
+      <div className="h-[60%]">
         <LiveRouteTracking
           destination={destinationCoords}
           isCaptain={false}
@@ -136,65 +155,114 @@ const UserRiding = () => {
         />
       </div>
 
-      <div className="h-2/5 p-4">
-        <div className="flex items-center justify-between">
-          <img
-            className="h-12"
-            src="https://swyft.pl/wp-content/uploads/2023/05/how-many-people-can-a-uberx-take.jpg"
-            alt=""
-          />
-          <div className="text-right">
-            <h2 className="text-lg font-medium capitalize">
-              {ride.captain.fullname.firstname}
-            </h2>
-            <h4 className="text-xl font-semibold -mt-1 -mb-1">
-              {ride.captain.vehicleDetails.vehicleNumber}
-            </h4>
-            <p className="text-sm text-gray-600 capitalize">
-              {ride.captain.vehicleDetails.color}{" "}
-              {ride.captain.vehicleDetails.vehicleType}
+      <div className="h-[40%] p-4 bg-white relative z-10 rounded-t-3xl shadow-[0_-5px_15px_rgba(0,0,0,0.1)] flex flex-col justify-between">
+        <div className="flex items-center justify-between mb-1">
+          <div className="flex items-center gap-3">
+            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center relative overflow-hidden border border-gray-200">
+              <img
+                className="h-full object-cover w-full"
+                src={vehicleImageSrc}
+                alt="vehicle"
+              />
+            </div>
+            <div>
+              <h2 className="text-lg font-bold capitalize text-gray-800">
+                {ride.captain.fullname.firstname}
+              </h2>
+              <h4 className="text-xl font-bold text-gray-900 tracking-wide">
+                {ride.captain.vehicleDetails.vehicleNumber}
+              </h4>
+            </div>
+          </div>
+          <div className="flex flex-col items-end">
+            <p className="text-xs text-gray-500 font-medium uppercase mb-1">
+              OTP
             </p>
-          </div>
-        </div>
-
-        <div className="flex gap-2 justify-between flex-col items-center">
-          <div className="w-full mt-5">
-            <div className="flex items-center gap-5 p-3 border-b-2">
-              <i className="text-lg ri-map-pin-2-fill"></i>
-              <div>
-                <h3 className="text-lg font-medium">Destination</h3>
-                <p className="text-sm -mt-1 text-gray-600">
-                  {ride.destination.location_name}
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center gap-5 p-3">
-              <i className="ri-currency-line"></i>
-              <div>
-                <h3 className="text-lg font-medium">₹{ride.fare} </h3>
-                <p className="text-sm -mt-1 text-gray-600">Cash</p>
-              </div>
+            <div className="bg-black text-white px-3 py-1 rounded font-mono font-bold text-lg shadow-sm">
+              {ride.otp}
             </div>
           </div>
         </div>
 
-        {/* ACTION BUTTONS */}
-        <div className="flex gap-2 mt-5">
+        <div className="w-full bg-green-50 border border-green-100 p-2 rounded-lg flex items-center gap-1 mb-1">
+          <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+          <p className="text-xs font-semibold text-green-800">
+            Ride in Progress - Sharing Live Location
+          </p>
+        </div>
+
+        <div className="flex items-center gap-1 border-t border-gray-100 pt-1">
+          <div className="flex-1">
+            <p className="text-xs text-gray-400 font-medium">DESTINATION</p>
+            <h3 className="text-sm font-semibold text-gray-800 ">
+              {ride.destination.location_name}
+            </h3>
+          </div>
+          <div className="text-right">
+            <p className="text-xs text-gray-400 font-medium">FARE</p>
+            <h3 className="text-xl font-bold text-gray-900">₹{ride.fare}</h3>
+          </div>
+        </div>
+
+        <div className="flex gap-1 mt-1">
           <button
-            className="flex-1 bg-green-600 text-white font-semibold p-2 rounded-lg"
-            onClick={() => setPayMessage("Paid via Coupon")}
+            className="flex-1 bg-[#9aec00] hover:bg-[#8ad300] text-gray-900 font-bold p-3 rounded-xl shadow-sm transition active:scale-[0.98]"
+            onClick={() => setIsPaymentPanelOpen(true)}
           >
-            {payMessage}
+            Make Payment
           </button>
-
-          {/* NEW: Cancel Button */}
           <button
-            className="flex-1 bg-red-600 text-white font-semibold p-2 rounded-lg"
+            className="w-12 bg-red-50 text-red-600 font-bold rounded-xl flex items-center justify-center border border-red-100 hover:bg-red-100 transition"
             onClick={cancelRide}
+            title="Cancel Ride"
           >
-            Cancel Ride
+            <i className="ri-close-circle-line text-2xl"></i>
           </button>
         </div>
+      </div>
+
+      <div
+        ref={paymentPanelRef}
+        className="fixed w-full z-20 bottom-0 translate-y-full bg-white px-3 py-10 pt-12 rounded-t-3xl shadow-2xl h-[40%]"
+      >
+        {/* Close Handle */}
+        <h5
+          className="p-1 text-center w-[93%] absolute top-0 cursor-pointer opacity-50"
+          onClick={() => setIsPaymentPanelOpen(false)}
+        >
+          <i className="ri-arrow-down-wide-line text-3xl"></i>
+        </h5>
+
+        <h3 className="text-xl font-bold text-gray-900 mb-4">
+          Select Payment Method
+        </h3>
+
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl border border-gray-200 cursor-pointer hover:bg-gray-100">
+            <i className="ri-money-dollar-circle-fill text-2xl text-green-600"></i>
+            <div className="flex-1">
+              <h4 className="font-bold text-gray-800">Cash</h4>
+              <p className="text-xs text-gray-500">
+                Pay directly to the captain
+              </p>
+            </div>
+            <h4 className="font-bold">₹{ride.fare}</h4>
+          </div>
+
+          <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl border border-gray-200 cursor-pointer hover:bg-gray-100 opacity-60">
+            <i className="ri-bank-card-fill text-2xl text-blue-600"></i>
+            <div className="flex-1">
+              <h4 className="font-bold text-gray-800">Online (Coming Soon)</h4>
+              <p className="text-xs text-gray-500">UPI, Cards, Netbanking</p>
+            </div>
+          </div>
+        </div>
+        <button
+          onClick={() => setIsPaymentPanelOpen(false)}
+          className="flex-1 bg-[#9aec00] hover:bg-[#8ad300] text-gray-900 font-bold p-3 rounded-xl shadow-sm transition active:scale-[0.98] w-full mt-5"
+        >
+          Close
+        </button>
       </div>
     </div>
   );

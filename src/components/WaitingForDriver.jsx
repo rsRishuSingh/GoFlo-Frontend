@@ -13,7 +13,7 @@ const WaitingForDriver = (props) => {
   return (
     <div >
       <h5 className=" text-center w-[93%] absolute top-0">
-        <i class="text-5xl text-gray-400 ri-separator"></i>
+        <i className="text-5xl text-gray-400 ri-separator"></i>
       </h5>
 
       <div className="flex items-center justify-between mt-2 mb-2 px-2">

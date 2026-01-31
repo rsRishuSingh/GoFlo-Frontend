@@ -477,9 +477,9 @@ const UserHome = () => {
 
       <button
         onClick={handleUseCurrentLocation}
-        className="absolute bottom-[40%] right-5 z-5 h-10 w-10 bg-white rounded-full flex items-center justify-center shadow-lg hover:bg-gray-100 transition-colors"
+        className="absolute bottom-[37%] right-5 z-5 h-10 w-10 bg-white rounded-full flex items-center justify-center shadow-lg hover:bg-gray-100 transition-colors"
       >
-        <i class="ri-crosshair-2-line text-2xl "></i>
+        <i className="ri-crosshair-2-line text-2xl "></i>
       </button>
 
       <div

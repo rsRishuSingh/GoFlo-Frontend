@@ -43,7 +43,7 @@ const CaptainLogin = () => {
       if (response.status === 201 || response.status === 200) {
         const data = response.data;
         setCaptain(data.captain);
-        localStorage.setItem("captainToken", data.captainToken); 
+        localStorage.setItem("captainToken", data.captainToken);
         navigate("/captain-home");
       }
     } catch (err) {
@@ -60,52 +60,56 @@ const CaptainLogin = () => {
   };
 
   return (
-    <div className="p-7 h-screen flex flex-col justify-between bg-[#edfddeec]">
+    <div className="p-7 h-screen flex flex-col justify-between">
       <div>
         <img
-          className="w-32 mb-3"
-          src="https://1000logos.net/wp-content/uploads/2022/08/Ola-Cabs-Logo-768x432.png"
+          className="w-24 mb-5"
+          src="https://upload.wikimedia.org/wikipedia/en/thumb/0/0f/Ola_Cabs_logo.svg/1280px-Ola_Cabs_logo.svg.png"
           alt="Ola Logo"
         />
 
         <form onSubmit={submitHandler}>
-          <h3 className="text-lg font-medium mb-2">What's your email</h3>
+          <h5 className="text-4xl font-bold my-10 text-center text-[#262626] ">
+            Welcome Back
+          </h5>
+          <h3 className="text-lg font-medium mb-1">What's your email</h3>
           <input
             type="email"
             required
+            autoComplete="username"
             placeholder="email@example.com"
             value={email}
             onChange={(e) => {
               setEmail(e.target.value);
               if (errors.email) setErrors({ ...errors, email: "" });
             }}
-            className="bg-[#ffffff] rounded-2xl px-4 py-2 border-none w-full text-lg placeholder:text-base"
+            className="rounded-2xl  px-4 py-2  border-2 w-full text-base placeholder:text-base"
           />
           {/* Fixed height error container */}
-          <div className="min-h-6.25 mb-4">
+          <div className="min-h-6.25 ">
             {errors.email && (
               <p className="text-red-500 text-sm px-2">{errors.email}</p>
             )}
           </div>
 
-          <h3 className="text-lg font-medium mb-2">Enter Password</h3>
+          <h3 className="text-lg font-medium mb-1">Enter your Password</h3>
           <input
             type="password"
+            placeholder="Password"
             required
-            placeholder="password"
+            autoComplete="current-password"
             value={password}
             onChange={(e) => {
               setPassword(e.target.value);
               if (errors.password) setErrors({ ...errors, password: "" });
             }}
-            className="bg-[#ffffff] rounded-2xl px-4 py-2 border-none w-full text-lg placeholder:text-base"
+            className=" rounded-2xl border-2 px-4 py-2  w-full text-base placeholder:text-base"
           />
-          <div className="min-h-6.25 mb-4">
+          <div className="min-h-6.25">
             {errors.password && (
               <p className="text-red-500 text-sm px-2">{errors.password}</p>
             )}
           </div>
-
           <button
             type="submit"
             className="bg-[#098bf5] text-white font-semibold mb-3 rounded-4xl px-4 py-2 w-full text-lg active:scale-95 transition-transform"
@@ -116,7 +120,7 @@ const CaptainLogin = () => {
 
         <p className="text-center text-[15px] font-medium">
           <span className="text-gray-700"> Join our fleet? </span>
-          <Link to="/captain-signup" className="text-blue-600 font-bold">
+          <Link to="/captain-signup" className="text-blue-500 font-bold">
             Register as a Driver
           </Link>
         </p>
@@ -125,7 +129,7 @@ const CaptainLogin = () => {
       <div>
         <Link
           to="/user-login"
-          className="bg-[#7fdc0e] flex items-center justify-center text-white font-semibold mb-5 rounded-4xl px-4 py-2 w-full text-lg"
+          className="flex items-center justify-center bg-[#9aec00] text-gray-950 font-semibold mb-3 rounded-4xl px-4 py-2 w-full text-lg active:scale-95 transition-transform"
         >
           Sign in as User
         </Link>
