@@ -85,6 +85,7 @@ const UserHome = () => {
     } catch (error) {
       console.error("Error cancelling ride:", error);
       alert("Failed to cancel ride");
+      navigate('/user-login')
     }
   };
 
@@ -99,12 +100,16 @@ const UserHome = () => {
 
     const handleRideConfirmed = (rideData) => {
       setVehicleFound(false);
+      setVehiclePanel(false);
       setWaitingForDriver(true);
       setRide(rideData);
     };
 
     const handleRideStarted = (rideData) => {
       setWaitingForDriver(false);
+      // Clear inputs before navigating
+      setPickup("");
+      setDestination("");
       navigate("/user-riding", { state: { ride: rideData } });
     };
 
@@ -137,6 +142,9 @@ const UserHome = () => {
           // FIX: Check if ride has started (fallback if socket event missed)
           if (response.data.status === "ongoing") {
             setWaitingForDriver(false);
+            // Clear inputs before navigating
+            setPickup("");
+            setDestination("");
             navigate("/user-riding", { state: { ride: response.data } });
             return;
           }
@@ -153,6 +161,7 @@ const UserHome = () => {
           setRide(response.data);
         } catch (err) {
           console.error("Error polling ride status:", err);
+          
         }
       };
 
@@ -279,6 +288,7 @@ const UserHome = () => {
       console.error("Error finding trip:", error);
       if (error.response) {
         alert(error.response.data.message || "Error calculating fare");
+        navigate('/user-login')
       }
     }
   };
@@ -305,6 +315,7 @@ const UserHome = () => {
     } catch (error) {
       console.error("Error creating ride:", error);
       alert("Error creating ride. Please try again.");
+      navigate('/user-riding')
     }
   };
 
@@ -328,6 +339,7 @@ const UserHome = () => {
     } catch (error) {
       console.error("Error setting current location:", error);
       alert("Unable to fetch your location");
+      navigate('/user-login')
     }
   };
 
@@ -349,7 +361,7 @@ const UserHome = () => {
       );
 
       const originData = { location_name, ltd: latitude, lng: longitude };
-
+      
       const rideResponse = await axios.post(
         `${import.meta.env.VITE_BASE_URL}/rides/create`,
         {
@@ -362,7 +374,7 @@ const UserHome = () => {
       );
 
       if (rideResponse.status === 201) {
-        setPickup("Current Location");
+        setPickup(originData.location_name);
         setDestination(hospital.location_name);
         setVehicleType("car");
         setFare({ car: rideResponse.data.fare });
@@ -372,9 +384,11 @@ const UserHome = () => {
         setPanelOpen(false);
         setVehiclePanel(false);
       }
+      
     } catch (error) {
       console.error("SOS Error:", error);
       alert("Failed to initiate emergency ride.");
+      navigate("/user-login");
     }
   };
 
@@ -427,6 +441,8 @@ const UserHome = () => {
     return null;
   }, [ride?.origin?.ltd, ride?.origin?.lng]);
 
+  const isFindTripDisabled = pickup.length < 3 || destination.length < 3;
+
   return (
     <div className="h-screen relative w-full overflow-hidden">
       <img
@@ -470,7 +486,7 @@ const UserHome = () => {
         ref={panelWrapperRef}
         className="flex flex-col h-[35%] absolute bottom-0 w-full z-10 bg-white"
       >
-        <div className="p-6 bg-white rounded-t-3xl shadow-lg relative">
+        <div className="p-6 bg-white rounded-t-3xl  relative">
           <h5
             ref={panelCloseRef}
             onClick={() => setPanelOpen(false)}
@@ -494,7 +510,7 @@ const UserHome = () => {
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 24 24"
                 fill="rgba(170,234,54,1)"
-                className="w-5 h-5 inline "
+                className="w-7 h-7 inline "
               >
                 <path d="M2 5L9 2L15 5L21.303 2.2987C21.5569 2.18992 21.8508 2.30749 21.9596 2.56131C21.9862 2.62355 22 2.69056 22 2.75827V19L15 22L9 19L2.69696 21.7013C2.44314 21.8101 2.14921 21.6925 2.04043 21.4387C2.01375 21.3765 2 21.3094 2 21.2417V5Z" />
               </svg>
@@ -510,7 +526,7 @@ const UserHome = () => {
               }}
               value={pickup}
               onChange={handlePickupChange}
-              className="bg-gray-100 px-12 py-2 text-lg rounded-lg w-full"
+              className="bg-gray-100 px-12 py-2 text-base rounded-lg w-full"
               placeholder="Add a pick-up location"
             />
             <input
@@ -520,13 +536,18 @@ const UserHome = () => {
               }}
               value={destination}
               onChange={handleDestinationChange}
-              className="bg-gray-100 px-12 py-2 text-lg rounded-lg w-full my-4"
+              className="bg-gray-100 px-12 py-2 text-base rounded-lg w-full my-4"
               placeholder="Enter your destination"
             />
           </form>
           <button
             onClick={findTrip}
-            className="bg-[#9aec00] text-gray-950 font-bold  px-4 py-3 rounded-lg w-full cursor-pointer text-lg"
+            disabled={isFindTripDisabled}
+            className={`${
+              isFindTripDisabled
+                ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                : "bg-[#9aec00] text-gray-950 cursor-pointer"
+            } font-bold px-4 py-3 rounded-2xl w-full text-lg transition-colors duration-200`}
           >
             Find Ride
           </button>

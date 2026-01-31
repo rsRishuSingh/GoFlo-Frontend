@@ -12,7 +12,7 @@ const Start = () => {
 
         <img
           className="relative z-10 w-32 ml-8"
-          src="/logo.png"
+          src="https://upload.wikimedia.org/wikipedia/en/thumb/0/0f/Ola_Cabs_logo.svg/1280px-Ola_Cabs_logo.svg.png"
           alt="Ola Logo"
         />
 

@@ -1,12 +1,19 @@
 import React from "react";
 
 const LookingForDriver = (props) => {
+  const vehicleImages = {
+    car: "/olaCar.png",
+    moto: "/olaBike.png",
+    auto: "/olaAuto.png",
+  };
+
   return (
     <div>
       <h5
         className="p-1 text-center w-[93%] absolute top-0 cursor-pointer"
-        onClick={() => {
+        onClick={async () => {
           props.setVehicleFound(false);
+          await props.cancelRide();
         }}
       >
         <i className="text-3xl text-gray-300 ri-arrow-down-wide-line"></i>
@@ -15,38 +22,33 @@ const LookingForDriver = (props) => {
 
       <div className="flex gap-2 justify-between flex-col items-center">
         <img
-          className="h-20"
-          src="https://swyft.pl/wp-content/uploads/2023/05/how-many-people-can-a-uberx-take.jpg"
-          alt="Car"
+          className="w-40"
+          src={vehicleImages[props.vehicleType]}
+          alt="Vehicle"
         />
-        <div className="w-full mt-5">
-          <div className="flex items-center gap-5 p-3 border-b-2 border-gray-100">
-            <i className="ri-map-pin-user-fill text-lg"></i>
+
+        <div className="w-full mt-1">
+          <div className="flex items-center gap-x-5 gap-y-3 p-3 border-b-2">
+            <i className="ri-map-pin-user-fill text-lg text-green-600"></i>
             <div>
               <h3 className="text-lg font-medium">Pickup</h3>
-              <p className="text-sm -mt-1 text-gray-600">
-                {/* FIXED: Check for object property */}
-                {props.pickup}
-              </p>
+              <p className="text-sm text-gray-600">{props.pickup}</p>
             </div>
           </div>
-          <div className="flex items-center gap-5 p-3 border-b-2 border-gray-100">
-            <i className="text-lg ri-map-pin-2-fill"></i>
+          <div className="flex items-center gap-x-5 gap-y-3 p-3 border-b-2">
+            <i className="text-lg ri-map-pin-2-fill text-red-600"></i>
             <div>
               <h3 className="text-lg font-medium">Destination</h3>
-              <p className="text-sm -mt-1 text-gray-600">
-                {/* FIXED: Check for object property */}
-                {props.destination}
-              </p>
+              <p className="text-sm text-gray-600">{props.destination}</p>
             </div>
           </div>
-          <div className="flex items-center gap-5 p-3">
-            <i className="ri-currency-line text-lg"></i>
+          <div className="flex items-center gap-x-5 gap-y-3 p-3">
+            <i className="ri-currency-line text-lg text-yellow-600"></i>
             <div>
               <h3 className="text-lg font-medium">
                 ₹{props.fare[props.vehicleType]}
               </h3>
-              <p className="text-sm -mt-1 text-gray-600">Cash</p>
+              <p className="text-sm text-gray-600">Cash</p>
             </div>
           </div>
         </div>
