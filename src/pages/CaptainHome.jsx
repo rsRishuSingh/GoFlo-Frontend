@@ -78,6 +78,7 @@ const CaptainHome = () => {
           { withCredentials: true },
         );
         localStorage.setItem("captainToken", response.data.captainToken);
+        console.log("Captain token refreshed", response.data.captainToken);
       } catch (err) {
         console.error("Session expired, please login again");
         navigate("/captain-login");

@@ -12,6 +12,7 @@ import ConfirmRide from "../components/ConfirmRide";
 import LookingForDriver from "../components/LookingForDriver";
 import WaitingForDriver from "../components/WaitingForDriver";
 import LiveTracking from "../components/LiveTracking";
+import LiveRouteTracking from "../components/LiveRouteTracking";
 
 // Context
 import { SocketContext } from "../context/SocketContext";
@@ -95,7 +96,38 @@ const UserHome = () => {
     };
   }, [user, socket, navigate]);
 
-  // 2. Token Refresh Interval
+  // 2. JOIN RIDE ROOM
+  useEffect(() => {
+    if (waitingForDriver && ride?._id) {
+      socket.emit("join-ride", { rideId: ride._id });
+    }
+  }, [waitingForDriver, ride, socket]);
+
+  // 3. POLLING FOR LIVE UPDATES (The Fix)
+  // This fetches the Captain's latest location while you wait.
+  useEffect(() => {
+    if (waitingForDriver && ride?._id) {
+      const fetchRideStatus = async () => {
+        try {
+          const response = await axios.get(
+            `${import.meta.env.VITE_BASE_URL}/rides/${ride._id}`,
+            { headers: getAuthHeaders() },
+          );
+          // Update ride state to reflect new captain location
+          setRide(response.data);
+        } catch (err) {
+          console.error("Error polling ride status:", err);
+        }
+      };
+
+      const interval = setInterval(fetchRideStatus, 4000); // Poll every 4 seconds
+      fetchRideStatus(); // Initial fetch
+
+      return () => clearInterval(interval);
+    }
+  }, [waitingForDriver, ride?._id]);
+
+  // 4. Token Refresh Interval
   useEffect(() => {
     const refreshToken = async () => {
       try {
@@ -104,7 +136,7 @@ const UserHome = () => {
           {},
           { withCredentials: true },
         );
-        localStorage.setItem("userToken", response.data.captainToken);
+        localStorage.setItem("userToken", response.data.token);
       } catch (err) {
         console.error("Session expired, please login again");
         navigate("/user-login");
@@ -115,7 +147,6 @@ const UserHome = () => {
   }, [navigate]);
 
   // --- API Handlers ---
-
   const fetchSuggestions = async (input) => {
     try {
       const response = await axios.get(
@@ -216,16 +247,11 @@ const UserHome = () => {
     return addressResponse.data.address;
   };
 
-  // --- NEW: Handle setting current location as pickup ---
   const handleUseCurrentLocation = async () => {
     try {
       const position = await getCurrentPosition();
       const { latitude, longitude } = position.coords;
-
-      // Fetch readable address
       const address = await getAddressFromCoordinates(latitude, longitude);
-
-      // Update Pickup State
       setPickup(address);
     } catch (error) {
       console.error("Error setting current location:", error);
@@ -284,7 +310,6 @@ const UserHome = () => {
   };
 
   // --- Animations ---
-
   useGSAP(() => {
     if (panelOpen) {
       gsap.to(panelWrapperRef.current, { height: "100%" });
@@ -316,6 +341,14 @@ const UserHome = () => {
     [waitingForDriver],
   );
 
+  // Extract Captain's Live Location from the Polled Data
+  const captainLocation = ride?.captain?.location?.coordinates
+    ? {
+        lat: ride.captain.location.coordinates[1],
+        lng: ride.captain.location.coordinates[0],
+      }
+    : null;
+
   return (
     <div className="h-screen relative w-full overflow-hidden">
       <img
@@ -325,7 +358,20 @@ const UserHome = () => {
       />
 
       <div className="h-[70%] w-full z-0">
-        <LiveTracking />
+        {/* CONDITIONALLY RENDER MAPS */}
+        {waitingForDriver && ride ? (
+          <LiveRouteTracking
+            destination={{
+              lat: ride.origin.ltd,
+              lng: ride.origin.lng,
+            }}
+            isCaptain={false}
+            rideId={ride._id}
+            captainLocation={captainLocation} // Pass live coordinates
+          />
+        ) : (
+          <LiveTracking />
+        )}
       </div>
 
       <button
@@ -345,6 +391,7 @@ const UserHome = () => {
         <i className="ri-crosshair-fill text-xl text-gray-700"></i>
       </button>
 
+      {/* --- FLOATING PANELS --- */}
       <div
         ref={panelWrapperRef}
         className="flex flex-col h-[30%] absolute bottom-0 w-full z-10 bg-white"
@@ -362,7 +409,6 @@ const UserHome = () => {
 
           <form className="relative py-3" onSubmit={(e) => e.preventDefault()}>
             <div className="absolute h-16 w-1 top-1/2 -translate-y-1/2 left-5 bg-gray-700 rounded-full" />
-
             <input
               onClick={() => {
                 setPanelOpen(true);
@@ -373,7 +419,6 @@ const UserHome = () => {
               className="bg-gray-100 px-12 py-2 text-lg rounded-lg w-full"
               placeholder="Add a pick-up location"
             />
-
             <input
               onClick={() => {
                 setPanelOpen(true);
