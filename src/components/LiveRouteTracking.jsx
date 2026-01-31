@@ -7,7 +7,7 @@ const containerStyle = {
   height: "100%",
 };
 
-// 🎨 Ola-like Style
+// 🎨 Ola-like Style (PRESERVED EXACTLY AS REQUESTED)
 const mapStyles = [
   {
     featureType: "poi",
@@ -65,17 +65,30 @@ const mapOptions = {
   styles: mapStyles,
 };
 
-const LiveRouteTracking = ({ destination, isCaptain = false, rideId }) => {
+const LiveRouteTracking = ({
+  destination,
+  isCaptain = false,
+  rideId,
+  captainLocation,
+}) => {
   const [currentPosition, setCurrentPosition] = useState(null);
   const [directionsResponse, setDirectionsResponse] = useState(null);
   const mapRef = useRef(null);
   const { socket } = useContext(SocketContext);
 
-  // 1. Live Location & Socket Logic
+  // 1. Polling Synchronization (The Concrete Fix)
+  // When the parent component fetches new data from the DB, update the map immediately.
+  useEffect(() => {
+    if (!isCaptain && captainLocation) {
+      setCurrentPosition(captainLocation);
+    }
+  }, [captainLocation, isCaptain]);
+
+  // 2. Live Location & Socket Logic
   useEffect(() => {
     let interval;
 
-    // --- CAPTAIN LOGIC (Send Data) ---
+    // --- CAPTAIN LOGIC (Send Data via GPS) ---
     if (isCaptain) {
       const updateLocation = () => {
         if (navigator.geolocation) {
@@ -93,52 +106,36 @@ const LiveRouteTracking = ({ destination, isCaptain = false, rideId }) => {
       interval = setInterval(updateLocation, 4000);
     }
 
-    // --- USER LOGIC (Receive Data) ---
+    // --- USER LOGIC (Receive Data via Socket - Fallback) ---
     else {
-      if (rideId) {
-        console.log("Searching for ride room:", rideId);
+      // Even though we poll, we keep this listener active for real-time updates
+      // between the 4-second API calls.
+      const handleLocationUpdate = (data) => {
+        if (data && data.location) {
+          setCurrentPosition({
+            lat: data.location.ltd,
+            lng: data.location.lng,
+          });
+        }
+      };
 
-        // A. Initial Join
-        socket.emit("join-ride", { rideId });
-
-        // B. Handle Reconnection (The Fix for Freezing)
-        const handleReconnect = () => {
-          console.log("Socket reconnected! Re-joining ride room:", rideId);
-          socket.emit("join-ride", { rideId });
-        };
-
-        // C. Handle Incoming Location Data
-        const handleLocationUpdate = (data) => {
-          if (data && data.location) {
-            // console.log("📍 Location update received:", data.location); // Uncomment to debug
-            setCurrentPosition({
-              lat: data.location.ltd,
-              lng: data.location.lng,
-            });
-          }
-        };
-
-        // Attach Listeners
-        socket.on("connect", handleReconnect);
+      if (socket) {
         socket.on("captain-location-update", handleLocationUpdate);
-
-        // Cleanup
-        return () => {
-          socket.off("connect", handleReconnect);
-          socket.off("captain-location-update", handleLocationUpdate);
-        };
       }
+
+      return () => {
+        if (socket) {
+          socket.off("captain-location-update", handleLocationUpdate);
+        }
+      };
     }
 
     return () => clearInterval(interval);
   }, [isCaptain, rideId, socket]);
 
-  // 2. Route Calculation Logic (Only reruns if destination changes)
+  // 3. Route Calculation Logic
   useEffect(() => {
     if (!currentPosition || !destination) return;
-
-    // Avoid recalculating route if we already have one and the captain just moved slightly
-    // (Optional optimization: Check distance to end)
 
     if (window.google) {
       const directionsService = new window.google.maps.DirectionsService();
@@ -169,7 +166,8 @@ const LiveRouteTracking = ({ destination, isCaptain = false, rideId }) => {
         <Marker
           position={currentPosition}
           icon={{
-            url: "/carTracker.png", // Ensure this exists in public/ folder
+            // Ensure this image exists in your public folder or use a URL
+            url: "/carTracker.png",
             scaledSize: { width: 50, height: 50 },
             anchor: { x: 25, y: 25 },
           }}
@@ -181,7 +179,7 @@ const LiveRouteTracking = ({ destination, isCaptain = false, rideId }) => {
           options={{
             directions: directionsResponse,
             suppressMarkers: true,
-            preserveViewport: true, // PREVENTS flickering zoom reset
+            preserveViewport: true,
             polylineOptions: {
               strokeColor: "#ff0000",
               strokeWeight: 4,

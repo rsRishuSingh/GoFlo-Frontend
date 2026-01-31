@@ -26,11 +26,18 @@ const CaptainHome = () => {
   useEffect(() => {
     if (!captain?._id) return;
 
-    socket.emit("join", {
-      userId: captain._id,
-      userType: "captain",
-    });
+    // A. Join Logic
+    const joinCaptain = () => {
+      socket.emit("join", {
+        userId: captain._id,
+        userType: "captain",
+      });
+    };
 
+    // Emit immediately on mount
+    joinCaptain();
+
+    // B. Location Logic
     const updateLocation = () => {
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition((position) => {
@@ -40,8 +47,6 @@ const CaptainHome = () => {
               ltd: position.coords.latitude,
               lng: position.coords.longitude,
             },
-            // Note: If we had a confirmed ride ID in state here, we'd pass it.
-            // Since active ride tracking moves to CaptainRiding.jsx, we send null here.
             activeRideId: null,
           });
         });
@@ -49,10 +54,18 @@ const CaptainHome = () => {
     };
 
     const locationInterval = setInterval(updateLocation, 10000);
-
     updateLocation();
 
-    return () => clearInterval(locationInterval);
+    // C. Reconnection Handling (Crucial for stability)
+    // If the connection drops, we MUST re-join to update the socketId in DB
+    socket.on("connect", joinCaptain);
+    socket.on("reconnect", joinCaptain);
+
+    return () => {
+      clearInterval(locationInterval);
+      socket.off("connect", joinCaptain);
+      socket.off("reconnect", joinCaptain);
+    };
   }, [captain, socket]);
 
   // 2. Token Refresh Logic

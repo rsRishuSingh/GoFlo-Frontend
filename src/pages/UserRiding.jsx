@@ -2,6 +2,7 @@ import React, { useRef, useState, useEffect, useContext } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { SocketContext } from "../context/SocketContext";
 import LiveRouteTracking from "../components/LiveRouteTracking";
+import axios from "axios"; // Ensure axios is imported
 
 const UserRiding = () => {
   const [payMessage, setPayMessage] = useState("Pay via Coupon");
@@ -9,8 +10,7 @@ const UserRiding = () => {
   const navigate = useNavigate();
   const { socket } = useContext(SocketContext);
 
-  // We use a function inside useState to load from localStorage BEFORE the first render.
-  // This prevents the component from being "null" for a split second on refresh.
+  // 1. Load Initial Ride Data
   const [ride, setRide] = useState(() => {
     if (location.state?.ride) {
       localStorage.setItem("currentRide", JSON.stringify(location.state.ride));
@@ -21,36 +21,74 @@ const UserRiding = () => {
     }
   });
 
-  // 2. FORCE SOCKET JOIN ON REFRESH
+  // 2. ROBUST POLLING MECHANISM (The Alternative Fix)
+  // Instead of relying on sockets (which break on refresh), we fetch the
+  // latest ride data from the DB every 4 seconds.
   useEffect(() => {
-    if (ride && socket) {
-      // Immediately tell the server we are part of this ride
+    if (!ride?._id) return;
+
+    const fetchRideUpdate = async () => {
+      try {
+        // This endpoint returns the ride AND the captain's latest location (via populate)
+        const response = await axios.get(
+          `${import.meta.env.VITE_BASE_URL}/rides/${ride._id}`,
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("userToken")}`,
+            },
+          },
+        );
+
+        const updatedRide = response.data;
+        setRide(updatedRide); // Update state with new location/status
+
+        // Check if ride is finished
+        if (updatedRide.status === "completed") {
+          localStorage.removeItem("currentRide");
+          navigate("/user-home");
+        }
+      } catch (error) {
+        console.error("Error fetching ride update:", error);
+      }
+    };
+
+    // Poll every 4 seconds
+    const intervalId = setInterval(fetchRideUpdate, 4000);
+
+    // Initial fetch to sync immediately on load
+    fetchRideUpdate();
+
+    return () => clearInterval(intervalId);
+  }, [ride?._id, navigate]);
+
+  // 3. Keep Socket for "Events" (Optional Backup)
+  // We still emit join-ride just in case, but we don't depend on it for location anymore.
+  useEffect(() => {
+    if (socket && ride?._id) {
       socket.emit("join-ride", { rideId: ride._id });
     }
-  }, [ride, socket]);
+  }, [socket, ride]);
 
-  // 3. LISTEN FOR RIDE END
-  useEffect(() => {
-    if (socket) {
-      socket.on("ride-ended", () => {
-        localStorage.removeItem("currentRide");
-        navigate("/user-home");
-      });
-    }
-    return () => {
-      if (socket) socket.off("ride-ended");
-    };
-  }, [socket, navigate]);
-
-  // If data is still missing, redirect to home
   if (!ride) {
-    navigate('/user-home');
+    navigate("/user-home");
     return (
       <div className="h-screen flex items-center justify-center">
         Loading...
       </div>
     );
   }
+
+  // 4. Extract Location Logic
+  // The polling updates 'ride', which contains 'captain.location'.
+  // We pass this live location to the map component.
+
+  // NOTE: Ensure your captain model has location.coordinates format correct
+  const captainLocation = ride.captain?.location?.coordinates
+    ? {
+        lat: ride.captain.location.coordinates[1],
+        lng: ride.captain.location.coordinates[0],
+      }
+    : null; // Fallback if location missing
 
   const destinationCoords = {
     lat: ride?.destination?.ltd || 28.6139,
@@ -71,6 +109,8 @@ const UserRiding = () => {
           destination={destinationCoords}
           isCaptain={false}
           rideId={ride._id}
+          // Pass the polled location directly to the map
+          captainLocation={captainLocation}
         />
       </div>
 
