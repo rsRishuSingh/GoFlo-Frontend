@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState, useContext, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import axios from "axios";
@@ -85,7 +85,7 @@ const UserHome = () => {
     } catch (error) {
       console.error("Error cancelling ride:", error);
       alert("Failed to cancel ride");
-      navigate('/user-login')
+      navigate("/user-login");
     }
   };
 
@@ -161,7 +161,6 @@ const UserHome = () => {
           setRide(response.data);
         } catch (err) {
           console.error("Error polling ride status:", err);
-          
         }
       };
 
@@ -288,7 +287,7 @@ const UserHome = () => {
       console.error("Error finding trip:", error);
       if (error.response) {
         alert(error.response.data.message || "Error calculating fare");
-        navigate('/user-login')
+        navigate("/user-login");
       }
     }
   };
@@ -315,7 +314,7 @@ const UserHome = () => {
     } catch (error) {
       console.error("Error creating ride:", error);
       alert("Error creating ride. Please try again.");
-      navigate('/user-riding')
+      navigate("/user-riding");
     }
   };
 
@@ -339,7 +338,7 @@ const UserHome = () => {
     } catch (error) {
       console.error("Error setting current location:", error);
       alert("Unable to fetch your location");
-      navigate('/user-login')
+      navigate("/user-login");
     }
   };
 
@@ -361,7 +360,7 @@ const UserHome = () => {
       );
 
       const originData = { location_name, ltd: latitude, lng: longitude };
-      
+
       const rideResponse = await axios.post(
         `${import.meta.env.VITE_BASE_URL}/rides/create`,
         {
@@ -384,7 +383,6 @@ const UserHome = () => {
         setPanelOpen(false);
         setVehiclePanel(false);
       }
-      
     } catch (error) {
       console.error("SOS Error:", error);
       alert("Failed to initiate emergency ride.");
@@ -445,11 +443,19 @@ const UserHome = () => {
 
   return (
     <div className="h-screen relative w-full overflow-hidden">
-      <img
-        className="w-24 absolute left-5 top-5 z-10 bg-white rounded-4xl p-2 shadow-md"
-        src="https://upload.wikimedia.org/wikipedia/en/thumb/0/0f/Ola_Cabs_logo.svg/1280px-Ola_Cabs_logo.svg.png"
-        alt="Ola Logo"
-      />
+      <div className="absolute left-5 top-5 z-10">
+        <img
+          className="w-24  bg-white rounded-4xl p-2 shadow-md my-2"
+          src="https://upload.wikimedia.org/wikipedia/en/thumb/0/0f/Ola_Cabs_logo.svg/1280px-Ola_Cabs_logo.svg.png"
+          alt="Ola Logo"
+        />
+        <Link
+          to="/user-logout"
+          className="h-10 w-10 mt-5 bg-white flex items-center justify-center rounded-full shadow-md"
+        >
+          <i class="text-xl font-medium ri-logout-box-line"></i>
+        </Link>
+      </div>
 
       <div className="h-[70%] w-full z-0">
         {/* CONDITIONALLY RENDER MAPS */}
@@ -464,6 +470,16 @@ const UserHome = () => {
           <LiveTracking />
         )}
       </div>
+
+      <button
+        onClick={handleEmergencyRide}
+        className="absolute top-[2%] right-5 z-5 bg-[#e6f11a] text-black h-11 w-11 rounded-full shadow-2xl flex items-center justify-center animate-pulse border-2 border-black active:scale-90 transition-all cursor-pointer"
+      >
+        <div className="flex flex-col items-center">
+          <i className="ri-alarm-warning-fill text-lg"></i>
+          <span className="text-[8px] font-bold uppercase">SOS</span>
+        </div>
+      </button>
 
       <button
         onClick={handleEmergencyRide}

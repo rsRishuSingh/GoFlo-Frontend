@@ -157,32 +157,28 @@ const CaptainHome = () => {
 
   return (
     <div className="h-screen overflow-hidden relative">
-      {/* Header */}
-      <div className="absolute p-6 top-0 flex items-center justify-between w-full z-10">
+      <div className=" absolute p-6 top-0 flex items-center justify-between w-full z-10">
         <img
-          className="w-16"
-          src="https://upload.wikimedia.org/wikipedia/commons/c/cc/Uber_logo_2018.png"
-          alt="Uber Logo"
+          className="w-24  bg-white rounded-4xl p-2 shadow-md"
+          src="https://upload.wikimedia.org/wikipedia/en/thumb/0/0f/Ola_Cabs_logo.svg/1280px-Ola_Cabs_logo.svg.png"
+          alt="Ola Logo"
         />
         <Link
           to="/captain-logout"
           className="h-10 w-10 bg-white flex items-center justify-center rounded-full shadow-md"
         >
-          <i className="text-lg font-medium ri-logout-box-r-line"></i>
+          <i className="text-xl  font-medium ri-logout-box-r-line"></i>
         </Link>
       </div>
 
-      {/* Map Background */}
-      <div className="h-3/5 relative z-0">
+      <div className="h-[55%] relative z-0">
         <LiveTracking />
       </div>
 
-      {/* Captain Details Panel */}
-      <div className="h-2/5 p-6 bg-white rounded-t-3xl shadow-[0_-5px_15px_rgba(0,0,0,0.1)] relative z-10">
+      <div className="h-[45%]  p-6 bg-white rounded-t-3xl shadow-[0_-5px_15px_rgba(0,0,0,0.1)] relative z-10">
         <CaptainDetails />
       </div>
 
-      {/* Ride Request Popup (Slide Up) */}
       <div
         ref={ridePopupPanelRef}
         className="absolute w-full z-20 bottom-0 translate-y-full bg-white px-3 py-10 pt-12 rounded-t-3xl shadow-2xl"
@@ -195,7 +191,6 @@ const CaptainHome = () => {
         />
       </div>
 
-      {/* Confirm Ride Popup (Slide Up) */}
       <div
         ref={confirmRidePopupPanelRef}
         className="absolute w-full h-screen z-30 bottom-0 translate-y-full bg-white px-3 py-10 pt-12 rounded-t-3xl"
