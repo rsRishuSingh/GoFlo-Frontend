@@ -71,16 +71,19 @@ const UserSignup = () => {
   };
 
   return (
-    <div className="p-7 h-screen flex flex-col justify-between bg-[#edfddeec]">
+    <div className="p-7 h-screen flex flex-col justify-between ">
       <div>
         <img
-          className="w-32 mb-10"
+          className="w-24 mb-5"
           src="https://upload.wikimedia.org/wikipedia/en/thumb/0/0f/Ola_Cabs_logo.svg/1280px-Ola_Cabs_logo.svg.png"
           alt="Ola Logo"
         />
 
         <form onSubmit={submitHandler}>
-          <h3 className="text-lg font-medium mb-2">What's your name</h3>
+          <h5 className="text-4xl font-bold my-10 text-center text-[#262626] ">
+            Ride with GoFlo
+          </h5>
+          <h3 className="text-base font-medium m1-2">What's your name</h3>
           <div className="flex gap-4">
             <div className="w-1/2">
               <input
@@ -92,13 +95,11 @@ const UserSignup = () => {
                   setFirstName(e.target.value);
                   if (errors.firstName) setErrors({ ...errors, firstName: "" });
                 }}
-                className="bg-[#ffffff] border-none w-full rounded-lg px-4 py-2 border text-lg placeholder:text-base"
+                className=" w-full rounded-lg px-4 py-2 border-2 text-base placeholder:text-base"
               />
-              <div className="min-h-6.25 mb-2">
+              <div className="min-h-6.25 ">
                 {errors.firstName && (
-                  <p className="text-red-500 text-xs mt-1">
-                    {errors.firstName}
-                  </p>
+                  <p className="text-red-500 text-sm">{errors.firstName}</p>
                 )}
               </div>
             </div>
@@ -110,14 +111,14 @@ const UserSignup = () => {
                 placeholder="Last name"
                 value={lastName}
                 onChange={(e) => setLastName(e.target.value)}
-                className="bg-[#ffffff] border-none w-full rounded-lg px-4 py-2 border text-lg placeholder:text-base"
+                className="bg-[#ffffff] w-full rounded-lg px-4 py-2 border-2 text-base placeholder:text-base"
               />
               {/* Spacer for alignment parity */}
               <div className="min-h-6.25 mb-2"></div>
             </div>
           </div>
 
-          <h3 className="text-lg font-medium mb-2">What's your email</h3>
+          <h3 className="text-base font-medium m1-2">What's your email</h3>
           <input
             type="email"
             required
@@ -127,15 +128,15 @@ const UserSignup = () => {
               setEmail(e.target.value);
               if (errors.email) setErrors({ ...errors, email: "" });
             }}
-            className="bg-[#ffffff] border-none rounded-2xl px-4 py-2 border w-full text-lg placeholder:text-base"
+            className="rounded-2xl px-4 py-2 border-2 w-full text-base placeholder:text-base"
           />
-          <div className="min-h-6.25 mb-2">
+          <div className="min-h-6.25 ">
             {errors.email && (
               <p className="text-red-500 text-sm mt-1">{errors.email}</p>
             )}
           </div>
 
-          <h3 className="text-lg font-medium mb-2">Enter Password</h3>
+          <h3 className="text-base font-medium mb-2">Enter Password</h3>
           <input
             type="password"
             required
@@ -145,9 +146,9 @@ const UserSignup = () => {
               setPassword(e.target.value);
               if (errors.password) setErrors({ ...errors, password: "" });
             }}
-            className="bg-[#ffffff] border-none rounded-2xl px-4 py-2 border w-full text-lg placeholder:text-base"
+            className=" rounded-2xl px-4 py-2 border-2 w-full text-base placeholder:text-base"
           />
-          <div className="min-h-6.25 mb-2">
+          <div className="min-h-6.25 ">
             {errors.password && (
               <p className="text-red-500 text-sm mt-1">{errors.password}</p>
             )}
@@ -155,14 +156,14 @@ const UserSignup = () => {
 
           <button
             type="submit"
-            className="bg-[#7fdc0e] text-white font-semibold mb-3 rounded-4xl px-4 py-2 w-full text-lg active:scale-95 transition-transform"
+            className="bg-[#9aec00] text-gray-950 font-semibold mb-3 rounded-4xl px-4 py-2 w-full text-lg active:scale-95 transition-transform"
           >
             Create account
           </button>
         </form>
 
         <p className="text-center text-[15px] font-medium">
-          <span className="text-gray-700">Already have an account? </span>
+          <span className="text-gray-900">Already have an account? </span>
           <Link to="/user-login" className="text-blue-600">
             Login here
           </Link>

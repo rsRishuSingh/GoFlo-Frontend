@@ -51,7 +51,6 @@ const UserHome = () => {
   const navigate = useNavigate();
   const { socket } = useContext(SocketContext);
   const { user } = useContext(UserDataContext);
-
   // --- Helpers ---
   const getAuthHeaders = () => ({
     Authorization: `Bearer ${localStorage.getItem("userToken")}`,
@@ -386,7 +385,7 @@ const UserHome = () => {
       gsap.to(panelRef.current, { height: "70%", padding: 24 });
       gsap.to(panelCloseRef.current, { opacity: 1 });
     } else {
-      gsap.to(panelWrapperRef.current, { height: "30%" });
+      gsap.to(panelWrapperRef.current, { height: "35%" });
       gsap.to(panelRef.current, { height: "0%", padding: 0 });
       gsap.to(panelCloseRef.current, { opacity: 0 });
     }
@@ -431,9 +430,9 @@ const UserHome = () => {
   return (
     <div className="h-screen relative w-full overflow-hidden">
       <img
-        className="w-16 absolute left-5 top-5 z-10"
-        src="https://upload.wikimedia.org/wikipedia/commons/c/cc/Uber_logo_2018.png"
-        alt="Uber Logo"
+        className="w-24 absolute left-5 top-5 z-10 bg-white rounded-4xl p-2 shadow-md"
+        src="https://upload.wikimedia.org/wikipedia/en/thumb/0/0f/Ola_Cabs_logo.svg/1280px-Ola_Cabs_logo.svg.png"
+        alt="Ola Logo"
       />
 
       <div className="h-[70%] w-full z-0">
@@ -452,36 +451,58 @@ const UserHome = () => {
 
       <button
         onClick={handleEmergencyRide}
-        className="absolute top-[2%] right-5 z-5 bg-red-600 text-white h-13 w-13 rounded-full shadow-2xl flex items-center justify-center animate-pulse border-4 border-white active:scale-90 transition-all cursor-pointer"
+        className="absolute top-[2%] right-5 z-5 bg-[#e6f11a] text-black h-11 w-11 rounded-full shadow-2xl flex items-center justify-center animate-pulse border-2 border-black active:scale-90 transition-all cursor-pointer"
       >
         <div className="flex flex-col items-center">
           <i className="ri-alarm-warning-fill text-lg"></i>
-          <span className="text-[10px] font-bold uppercase">SOS</span>
+          <span className="text-[8px] font-bold uppercase">SOS</span>
         </div>
       </button>
 
       <button
         onClick={handleUseCurrentLocation}
-        className="absolute bottom-[32%] right-5 z-5 h-10 w-10 bg-white rounded-full flex items-center justify-center shadow-lg hover:bg-gray-100 transition-colors"
+        className="absolute bottom-[40%] right-5 z-5 h-10 w-10 bg-white rounded-full flex items-center justify-center shadow-lg hover:bg-gray-100 transition-colors"
       >
-        <i className="ri-crosshair-fill text-xl text-gray-700"></i>
+        <i class="ri-crosshair-2-line text-2xl "></i>
       </button>
 
       <div
         ref={panelWrapperRef}
-        className="flex flex-col h-[30%] absolute bottom-0 w-full z-10 bg-white"
+        className="flex flex-col h-[35%] absolute bottom-0 w-full z-10 bg-white"
       >
         <div className="p-6 bg-white rounded-t-3xl shadow-lg relative">
           <h5
             ref={panelCloseRef}
             onClick={() => setPanelOpen(false)}
-            className="absolute opacity-0 right-6 top-6 text-2xl cursor-pointer"
+            className="absolute opacity-0 right-6 top-6 text-2xl cursor-pointer z-10"
           >
             <i className="ri-arrow-down-wide-line"></i>
           </h5>
-          <h4 className="text-2xl font-semibold">Find a trip</h4>
+
+          <h3 className="my-2 relative font-bold">
+            <span className="text-2xl ">
+              Hi{" "}
+              {user?.fullname?.firstname
+                ? user.fullname.firstname.charAt(0).toUpperCase() +
+                  user.fullname.firstname.slice(1)
+                : "There"}
+              ,{" "}
+            </span>
+            <span className="text-2xl ">
+              Book a Ride{" "}
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="rgba(170,234,54,1)"
+                className="w-5 h-5 inline "
+              >
+                <path d="M2 5L9 2L15 5L21.303 2.2987C21.5569 2.18992 21.8508 2.30749 21.9596 2.56131C21.9862 2.62355 22 2.69056 22 2.75827V19L15 22L9 19L2.69696 21.7013C2.44314 21.8101 2.14921 21.6925 2.04043 21.4387C2.01375 21.3765 2 21.3094 2 21.2417V5Z" />
+              </svg>
+            </span>
+          </h3>
+
           <form className="relative py-3" onSubmit={(e) => e.preventDefault()}>
-            <div className="absolute h-16 w-1 top-1/2 -translate-y-1/2 left-5 bg-gray-700 rounded-full" />
+            <div className="absolute h-18 w-1 top-1/2 -translate-y-1/2 left-5 bg-gray-800 rounded-full" />
             <input
               onClick={() => {
                 setPanelOpen(true);
@@ -499,15 +520,15 @@ const UserHome = () => {
               }}
               value={destination}
               onChange={handleDestinationChange}
-              className="bg-gray-100 px-12 py-2 text-lg rounded-lg w-full mt-3"
+              className="bg-gray-100 px-12 py-2 text-lg rounded-lg w-full my-4"
               placeholder="Enter your destination"
             />
           </form>
           <button
             onClick={findTrip}
-            className="bg-black text-white px-4 py-2 rounded-lg w-full cursor-pointer"
+            className="bg-[#9aec00] text-gray-950 font-bold  px-4 py-3 rounded-lg w-full cursor-pointer text-lg"
           >
-            Find Trip
+            Find Ride
           </button>
         </div>
         <div ref={panelRef} className="bg-white h-0 overflow-hidden">

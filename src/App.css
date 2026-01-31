@@ -1,0 +1,8 @@
+body,
+#root {
+    height: 100dvh;
+    /* Adapts to address bar appearing/disappearing */
+    width: 100%;
+    overflow: hidden;
+    /* Prevents scroll bounce */
+}

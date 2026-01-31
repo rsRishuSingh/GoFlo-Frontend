@@ -12,22 +12,25 @@ const Start = () => {
 
         <img
           className="relative z-10 w-32 ml-8"
-          src="https://1000logos.net/wp-content/uploads/2022/08/Ola-Cabs-Logo-768x432.png"
+          src="/logo.png"
           alt="Ola Logo"
         />
 
         <div className="relative z-10 pb-8 py-4 px-4">
-          <h2 className="text-[30px] font-semibold text-white">
-            Get Started with <span className="font-bold">OLA</span>
+          <h2 className="text-[28px] text-white">
+            Get Started with{" "}
+            <span className="font-bold text-[30px]">GoFlo</span>
           </h2>
 
-          <Link
-            to="/user-login"
-            className="flex items-center justify-center  font-semibold text-lg
-                       w-full bg-[#85dc02] text-white py-3 rounded-4xl mt-5"
-          >
-            Continue
-          </Link>
+          <div className="flex items-center justify-center">
+            <Link
+              to="/user-login"
+              className="flex items-center justify-center font-bold text-lg
+                       w-[90%] bg-[#aaea36] text-black py-3 rounded-4xl mt-3"
+            >
+              Get Started
+            </Link>
+          </div>
         </div>
       </div>
     </div>

@@ -37,6 +37,7 @@ const defaultMapOptions = {
   fullscreenControl: false,
   disableDefaultUI: true,
   styles: mapStyles,
+  gestureHandling: "greedy",
 };
 
 const LiveRouteTracking = ({
