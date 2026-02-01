@@ -30,44 +30,9 @@ const UserProtectWrapper = ({ children }) => {
           setIsLoading(false);
         }
       } catch (err) {
-        console.log("Initial Token Failed. Attempting Refresh...", err);
-
-        if (err.response && err.response.status === 401) {
-          try {
-            const refreshResponse = await axios.post(
-              `${import.meta.env.VITE_BASE_URL}/users/refresh-token`,
-              {},
-              { withCredentials: true },
-            );
-
-            if (refreshResponse.status === 200) {
-              const newUserToken = refreshResponse.data.userToken;
-
-              localStorage.setItem("userToken", newUserToken);
-
-              const retryResponse = await axios.get(
-                `${import.meta.env.VITE_BASE_URL}/users/profile`,
-                {
-                  headers: { Authorization: `Bearer ${newUserToken}` },
-                },
-              );
-
-              setUser(retryResponse.data.user);
-              setIsLoading(false);
-            }
-          } catch (refreshError) {
-            console.error(
-              "Refresh failed. Redirecting to login.",
-              refreshError,
-            );
-            localStorage.removeItem("userToken");
-            navigate("/user-login");
-          }
-        } else {
-          localStorage.removeItem("userToken");
+        localStorage.removeItem("userToken");
           navigate("/user-login");
         }
-      }
     };
 
     checkAuth();

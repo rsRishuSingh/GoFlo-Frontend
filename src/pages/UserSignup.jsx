@@ -123,6 +123,8 @@ const UserSignup = () => {
             type="email"
             required
             placeholder="email@example.com"
+            autoComplete="email"
+            name="email"
             value={email}
             onChange={(e) => {
               setEmail(e.target.value);
@@ -141,6 +143,8 @@ const UserSignup = () => {
             type="password"
             required
             placeholder="password"
+            autoComplete="password"
+            name="password"
             value={password}
             onChange={(e) => {
               setPassword(e.target.value);

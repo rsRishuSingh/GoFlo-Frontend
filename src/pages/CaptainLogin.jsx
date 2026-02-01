@@ -77,6 +77,7 @@ const CaptainLogin = () => {
             type="email"
             required
             autoComplete="username"
+            name="email"
             placeholder="email@example.com"
             value={email}
             onChange={(e) => {
@@ -99,6 +100,7 @@ const CaptainLogin = () => {
             required
             autoComplete="current-password"
             value={password}
+            name="password"
             onChange={(e) => {
               setPassword(e.target.value);
               if (errors.password) setErrors({ ...errors, password: "" });

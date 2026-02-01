@@ -81,6 +81,8 @@ const UserLogin = () => {
             required
             placeholder="email@example.com"
             value={email}
+            name="password"
+            autocomplete="current-email"
             onChange={(e) => {
               setEmail(e.target.value);
               if (errors.email) setErrors({ ...errors, email: "" });
@@ -100,6 +102,8 @@ const UserLogin = () => {
             required
             placeholder="Password"
             value={password}
+            name="password"
+            autocomplete="current-email"
             onChange={(e) => {
               setPassword(e.target.value);
               if (errors.password) setErrors({ ...errors, password: "" });

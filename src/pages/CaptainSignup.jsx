@@ -122,6 +122,8 @@ const CaptainSignup = () => {
             type="email"
             required
             placeholder="email@example.com"
+            autoComplete="username"
+            name="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             className="rounded-2xl px-4 py-2 border-2 w-full text-base placeholder:text-base"
@@ -137,6 +139,8 @@ const CaptainSignup = () => {
             type="password"
             required
             placeholder="password"
+            autoComplete="password"
+            name="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             className=" rounded-2xl px-4 py-2 border-2 w-full text-base placeholder:text-base"

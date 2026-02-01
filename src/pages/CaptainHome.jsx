@@ -63,24 +63,7 @@ const CaptainHome = () => {
     };
   }, [captain, socket]);
 
-  // 2. Token Refresh Logic
-  useEffect(() => {
-    const refreshToken = async () => {
-      try {
-        const response = await axios.post(
-          `${import.meta.env.VITE_BASE_URL}/captains/refresh-token`,
-          {},
-          { withCredentials: true },
-        );
-        localStorage.setItem("captainToken", response.data.captainToken);
-      } catch (err) {
-        console.error("Session expired, please login again");
-        navigate("/captain-login");
-      }
-    };
-    const interval = setInterval(refreshToken, 50 * 60 * 1000);
-    return () => clearInterval(interval);
-  }, [navigate]);
+ 
 
   // 3. Listen for New Rides AND Cancellations
   useEffect(() => {

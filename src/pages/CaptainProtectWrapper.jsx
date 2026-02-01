@@ -31,44 +31,8 @@ const CaptainProtectWrapper = ({ children }) => {
         }
       } catch (err) {
         console.log("Captain Auth Failed. Attempting Refresh...", err);
-
-        if (err.response && err.response.status === 401) {
-          try {
-            // 1. Call Refresh Token Endpoint
-            const refreshResponse = await axios.post(
-              `${import.meta.env.VITE_BASE_URL}/captains/refresh-token`,
-              {},
-              { withCredentials: true },
-            );
-
-            if (refreshResponse.status === 200) {
-              const newCaptainToken = refreshResponse.data.captainToken;
-
-              // 2. Update Storage
-              localStorage.setItem("captainToken", newCaptainToken);
-
-              // 3. Retry Profile Fetch with NEW Token
-              const retryResponse = await axios.get(
-                `${import.meta.env.VITE_BASE_URL}/captains/profile`,
-                {
-                  headers: { Authorization: `Bearer ${newCaptainToken}` },
-                },
-              );
-
-              // 4. Success
-              setCaptain(retryResponse.data.captain);
-              setIsLoading(false);
-            }
-          } catch (refreshError) {
-            console.error("Captain Refresh failed. Redirecting.", refreshError);
-            localStorage.removeItem("captainToken");
-            navigate("/captain-login");
-          }
-        } else {
-          // Handle other errors (e.g., invalid token format or other server errors)
-          localStorage.removeItem("captainToken");
-          navigate("/captain-login");
-        }
+        localStorage.removeItem("captainToken");
+        navigate("/captain-login");
       }
     };
 

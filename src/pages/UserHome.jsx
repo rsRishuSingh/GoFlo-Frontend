@@ -206,24 +206,6 @@ const UserHome = () => {
     }
   }, [vehicleFound, ride?._id]);
 
-  // 5. Token Refresh Interval
-  useEffect(() => {
-    const refreshToken = async () => {
-      try {
-        const response = await axios.post(
-          `${import.meta.env.VITE_BASE_URL}/users/refresh-token`,
-          {},
-          { withCredentials: true },
-        );
-        localStorage.setItem("userToken", response.data.userToken);
-      } catch (err) {
-        console.error("Session expired, please login again");
-        navigate("/user-login");
-      }
-    };
-    const interval = setInterval(refreshToken, 50 * 60 * 1000);
-    return () => clearInterval(interval);
-  }, [navigate]);
 
   // --- Suggestions & Geocoding Handlers ---
   const fetchSuggestions = async (input) => {
@@ -547,6 +529,7 @@ const UserHome = () => {
               onChange={handlePickupChange}
               className="bg-gray-100 px-12 py-2 text-base rounded-lg w-full"
               placeholder="Add a pick-up location"
+              
             />
             <input
               onClick={() => {
