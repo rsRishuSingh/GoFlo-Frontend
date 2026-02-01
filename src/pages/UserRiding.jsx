@@ -114,7 +114,6 @@ const UserRiding = () => {
         duration: 0.5,
         ease: "power4.out", // Smoother easing
       });
-      
     } else {
       gsap.to(paymentPanelRef.current, {
         y: "100%",
@@ -148,14 +147,13 @@ const UserRiding = () => {
 
   return (
     <div className="h-screen relative overflow-hidden">
-      <button
-        onClick={() => navigate("/user-home")}
-        className="absolute right-4 top-4 h-10 w-10 bg-white p-2 flex items-center justify-center rounded-full shadow-md z-10 cursor-pointer hover:bg-gray-100 transition"
-      >
-        <i className="ri-home-5-line text-lg font-bold text-green-600"></i>
-      </button>
+      <img
+        className="w-24 absolute left-5 top-5 z-10  bg-white rounded-4xl p-2 shadow-md my-2"
+        src="https://upload.wikimedia.org/wikipedia/en/thumb/0/0f/Ola_Cabs_logo.svg/1280px-Ola_Cabs_logo.svg.png"
+        alt="Ola Logo"
+      />
 
-      <div className="h-[65%]">
+      <div className="h-[60%]">
         <LiveRouteTracking
           destination={destinationCoords}
           isCaptain={false}
@@ -164,7 +162,7 @@ const UserRiding = () => {
         />
       </div>
 
-      <div className="h-[35%] p-4 bg-white relative z-10 rounded-t-3xl shadow-[0_-5px_15px_rgba(0,0,0,0.1)] flex flex-col justify-between">
+      <div className="h-[40%] py-4 px-2 bg-white relative z-10 rounded-t-3xl shadow-[0_-5px_15px_rgba(0,0,0,0.1)] flex flex-col justify-between">
         <div className="flex items-center justify-between mb-1">
           <div className="flex items-center gap-3">
             <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center relative overflow-hidden border border-gray-200">
@@ -214,14 +212,16 @@ const UserRiding = () => {
           </div>
         </div>
 
-        <div className="flex items-center gap-1 border-t border-gray-100 pt-1">
+        <div className="flex items-center gap-1 border-t border-gray-100 pt-2 pb-4">
           <div className="flex-1">
-            <p className="text-xs text-gray-400 font-medium">DESTINATION</p>
+            <p className="text-xs text-gray-400 font-medium pb-1">
+              DESTINATION
+            </p>
             <h3 className="text-sm font-semibold text-gray-800 ">
               {ride.destination.location_name}
             </h3>
           </div>
-          <div className="text-right">
+          <div className="text-center">
             <p className="text-xs text-gray-400 font-medium">FARE</p>
             <h3 className="text-xl font-bold text-gray-900">₹{ride.fare}</h3>
           </div>

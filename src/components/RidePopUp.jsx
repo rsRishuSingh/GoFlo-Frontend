@@ -11,10 +11,11 @@ const RidePopUp = (props) => {
           props.setRidePopupPanel(false);
         }}
       >
-        <div className="w-10 h-1 bg-gray-400 rounded-full"></div>
+        {" "}
+        <i className="text-3xl text-gray-300 ri-arrow-down-wide-line"></i>
       </div>
 
-      <div className="mt-3 flex items-center justify-between border-b border-gray-100 pb-3">
+      <div className="mt-6 flex items-center justify-between border-b border-gray-100 pb-2">
         <h3
           className={`text-2xl font-bold ${
             isEmergency ? "text-red-600 animate-pulse" : "text-gray-900"
@@ -35,7 +36,7 @@ const RidePopUp = (props) => {
       </div>
 
       <div
-        className={`flex items-center justify-between p-3 rounded-xl mt-4 shadow-sm border ${
+        className={`flex items-center justify-between p-2 rounded-xl mt-3 shadow-sm border ${
           isEmergency
             ? "bg-red-50 border-red-200"
             : "bg-[#e2e2e2] border-gray-200"

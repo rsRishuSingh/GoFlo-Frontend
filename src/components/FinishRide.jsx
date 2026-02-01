@@ -28,72 +28,92 @@ const FinishRide = (props) => {
   }
 
   return (
-    <div className="h-full">
-      <h5
-        className="p-1 text-center w-[93%] absolute top-0 cursor-pointer"
+    <div className="h-full relative">
+      <div
+        className=" w-full flex justify-center  cursor-pointer"
         onClick={() => {
           props.setFinishRidePanel(false);
         }}
       >
         <i className="text-3xl text-gray-300 ri-arrow-down-wide-line"></i>
-      </h5>
-      <h3 className="text-2xl font-semibold mb-5">Finish this Ride</h3>
-
-      <div className="flex items-center justify-between p-4 border-2 border-yellow-400 rounded-lg mt-4 shadow-sm">
-        <div className="flex items-center gap-3 ">
-          <img
-            className="h-12 w-12 rounded-full object-cover"
-            src="https://i.pinimg.com/236x/af/26/28/af26280b0ca305be47df0b799ed1b12b.jpg"
-            alt="User Avatar"
-          />
-          <h2 className="text-lg font-medium capitalize">
-            {props.ride?.user?.fullname?.firstname}
-          </h2>
-        </div>
-        <h5 className="text-lg font-semibold">
-          {(props.ride?.distance / 1000).toFixed(1)} Km
-        </h5>
       </div>
 
-      <div className="flex gap-2 justify-between flex-col items-center">
-        <div className="w-full mt-5">
-          <div className="flex items-center gap-5 p-3 border-b-2">
-            <i className="ri-map-pin-user-fill text-lg"></i>
-            <div>
-              <h3 className="text-lg font-medium">Pickup</h3>
-              <p className="text-sm -mt-1 text-gray-600">
-                {/* FIXED: Data Access */}
-                {props.ride?.origin?.location_name}
-              </p>
-            </div>
+      <div className="mt-1 flex items-center justify-between border-b border-gray-100 pb-3">
+        <h3 className="text-2xl font-bold text-gray-900">Finish Ride</h3>
+        <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-bold">
+          Running
+        </span>
+      </div>
+
+      {/* User Info Card */}
+      <div className="flex items-center justify-between p-4 bg-gray-50 border border-gray-100 rounded-xl mt-2 shadow-sm">
+        <div className="flex items-center gap-4">
+          <div className="w-14 h-14 rounded-full overflow-hidden border-2 border-white shadow-md">
+            <img
+              className="w-full h-full object-cover"
+              src="/rider.jpg"
+              alt="User Avatar"
+            />
           </div>
-          <div className="flex items-center gap-5 p-3 border-b-2">
-            <i className="ri-map-pin-2-fill text-lg"></i>
-            <div>
-              <h3 className="text-lg font-medium">Destination</h3>
-              <p className="text-sm -mt-1 text-gray-600">
-                {/* FIXED: Data Access */}
-                {props.ride?.destination?.location_name}
-              </p>
-            </div>
+          <div>
+            <h2 className="text-lg font-bold capitalize text-gray-900">
+              {props.ride?.user?.fullname?.firstname}
+            </h2>
+            <p className="text-sm font-semibold text-gray-500">
+              {props.ride?.distance
+                ? (props.ride.distance / 1000).toFixed(1)
+                : "0"}{" "}
+              km trip
+            </p>
           </div>
-          <div className="flex items-center gap-5 p-3">
-            <i className="ri-currency-line text-lg"></i>
-            <div>
-              <h3 className="text-lg font-medium">₹{props.ride?.fare} </h3>
-              <p className="text-sm -mt-1 text-gray-600">Cash</p>
-            </div>
+        </div>
+        <div className="text-right">
+          <h5 className="text-xl font-bold text-gray-900">
+            ₹{props.ride?.fare}
+          </h5>
+          <span className="text-xs text-gray-500">Cash</span>
+        </div>
+      </div>
+
+      {/* Ride Trace */}
+      <div className="flex flex-col gap-y-2 mt-2 px-2">
+        <div className="flex items-start gap-4">
+          <div className="flex flex-col items-center gap-1 mt-1 relative">
+            <div className="w-3 h-3 bg-green-600 rounded-full border-2 border-white shadow-sm"></div>
+            <div className="absolute top-4 w-0.5 h-16 bg-gray-300 border-l border-dashed border-gray-500"></div>{" "}
+          </div>
+          <div className="w-full border-b border-gray-100 pb-3">
+            <h3 className="text-lg font-semibold text-gray-900">Pickup</h3>
+            <p className="text-sm text-gray-500 leading-snug">
+              {props.ride?.origin?.location_name}
+            </p>
           </div>
         </div>
 
-        <div className="mt-10 w-full">
-          <button
-            onClick={endRide}
-            className="w-full mt-5 flex text-lg justify-center bg-green-600 text-white font-semibold p-3 rounded-lg shadow-md hover:bg-green-700 transition"
-          >
-            Finish Ride
-          </button>
+        <div className="flex items-start gap-y-2 gap-x-4">
+          <div className="flex flex-col items-center gap-1 mt-1">
+            <div className="w-3 h-3 bg-red-600 rounded-sm border-2 border-white shadow-sm"></div>
+          </div>
+          <div className="w-full">
+            <h3 className="text-lg font-semibold text-gray-900">Destination</h3>
+            <p className="text-sm text-gray-500 leading-snug">
+              {props.ride?.destination?.location_name}
+            </p>
+          </div>
         </div>
+      </div>
+
+      {/* Complete Button */}
+      <div className="mt-5 w-full">
+        <button
+          onClick={endRide}
+          className="w-full text-lg flex justify-center bg-[#9aec00] text-gray-900 font-bold p-4 rounded-xl shadow-md hover:bg-[#8ad300] transition active:scale-[0.98]"
+        >
+          Complete Ride
+        </button>
+        <p className="text-center text-xs text-gray-400 mt-2">
+          Clicking this will end the trip and process payment.
+        </p>
       </div>
     </div>
   );

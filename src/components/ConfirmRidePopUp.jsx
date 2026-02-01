@@ -70,7 +70,7 @@ const ConfirmRidePopUp = (props) => {
         >
           {isEmergency ? (
             <span className="flex items-center gap-2">
-              <i className="ri-alarm-warning-fill"></i> CONFIRM EMERGENCY
+              <i className="ri-alarm-warning-fill"></i> EMERGENCY HERE
             </span>
           ) : (
             "Confirm to Start"

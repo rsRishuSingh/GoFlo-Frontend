@@ -169,10 +169,10 @@ const LiveRouteTracking = ({
       {!isAutoPanning && (
         <button
           onClick={reCenterMap}
-          className="absolute bottom-24 right-4 bg-white p-3 rounded-full shadow-lg z-5 text-black font-bold flex items-center justify-center"
+          className="absolute bottom-16 right-4 bg-white p-3 w-13 rounded-full shadow-lg z-5 text-black font-bold flex items-center justify-center"
           title="Re-center"
         >
-          <i className="ri-focus-3-line text-xl"></i>
+          <i className="ri-focus-3-line text-xl "></i>
         </button>
       )}
     </div>
