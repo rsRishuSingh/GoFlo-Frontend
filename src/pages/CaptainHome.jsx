@@ -82,19 +82,31 @@ const CaptainHome = () => {
     return () => clearInterval(interval);
   }, [navigate]);
 
-  // 3. Listen for New Rides
+  // 3. Listen for New Rides AND Cancellations
   useEffect(() => {
+    // A. Handle New Ride
     socket.on("new-ride", (data) => {
       setRide(data);
       setRidePopupPanel(true);
     });
 
+    // B. Handle Ride Cancellation (Real-time update)
+    socket.on("ride-cancelled", (data) => {
+      // If the cancelled ride matches the one currently shown
+      setRidePopupPanel(false);
+      setConfirmRidePopupPanel(false); // Also close confirm panel if open
+      setRide(null);
+    });
+
+    // Cleanup listeners
     return () => {
       socket.off("new-ride");
+      socket.off("ride-cancelled");
     };
   }, [socket]);
 
-  // 4. Confirm Ride Logic (CRITICAL UPDATE HERE)
+  // 4. Confirm Ride Logic
+  // Inside CaptainHome.jsx
 
   async function confirmRide() {
     try {
@@ -108,21 +120,22 @@ const CaptainHome = () => {
         },
       );
 
-      // ONLY OPEN PANEL IF SUCCESS
       if (response.status === 200) {
         setRidePopupPanel(false);
         setConfirmRidePopupPanel(true);
       }
     } catch (error) {
-      // IF ERROR (e.g. Taken), DO NOT OPEN PANEL
+      console.error("Error confirming ride:", error);
+
       const message =
         error.response?.data?.message || "Ride is no longer available.";
       alert(message);
+
       setRidePopupPanel(false);
-      setRide(null);
+      setConfirmRidePopupPanel(false);
+      setRide(null); 
     }
   }
-
   // 5. Animations
   useGSAP(
     function () {
@@ -188,10 +201,10 @@ const CaptainHome = () => {
       >
         <RidePopUp
           ride={ride}
+          setRide={setRide}
           setRidePopupPanel={setRidePopupPanel}
           setConfirmRidePopupPanel={setConfirmRidePopupPanel}
           confirmRide={confirmRide}
-          setRide={setRide}
         />
       </div>
 

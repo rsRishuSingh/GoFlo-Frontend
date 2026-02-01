@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
 const UserProtectWrapper = ({ children }) => {
-  const { user, setUser } = useContext(UserDataContext);
+  const { setUser } = useContext(UserDataContext);
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
 
@@ -41,14 +41,14 @@ const UserProtectWrapper = ({ children }) => {
             );
 
             if (refreshResponse.status === 200) {
-              
+              const newUserToken = refreshResponse.data.userToken;
 
-              localStorage.setItem("userToken", refreshResponse.data.userToken);
+              localStorage.setItem("userToken", newUserToken);
 
               const retryResponse = await axios.get(
                 `${import.meta.env.VITE_BASE_URL}/users/profile`,
                 {
-                  headers: { Authorization: `Bearer ${newAccessToken}` },
+                  headers: { Authorization: `Bearer ${newUserToken}` },
                 },
               );
 
@@ -64,6 +64,7 @@ const UserProtectWrapper = ({ children }) => {
             navigate("/user-login");
           }
         } else {
+          localStorage.removeItem("userToken");
           navigate("/user-login");
         }
       }
@@ -73,7 +74,14 @@ const UserProtectWrapper = ({ children }) => {
   }, [navigate, setUser]);
 
   if (isLoading) {
-    return <div>Loading...</div>;
+    return (
+      <div className="h-screen flex items-center justify-center bg-white">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 border-4 border-black border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-gray-500 font-medium">Verifying User Session...</p>
+        </div>
+      </div>
+    );
   }
 
   return <>{children}</>;

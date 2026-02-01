@@ -83,7 +83,6 @@ const UserHome = () => {
       setRide(null);
       setPanelOpen(false);
       console.log(response.data);
-
     } catch (error) {
       console.error("Error cancelling ride:", error);
       alert("Failed to cancel ride");
@@ -141,22 +140,22 @@ const UserHome = () => {
             { headers: getAuthHeaders() },
           );
 
-          // FIX: Check if ride has started (fallback if socket event missed)
           if (response.data.status === "ongoing") {
             setWaitingForDriver(false);
-            // Clear inputs before navigating
             setPickup("");
             setDestination("");
             navigate("/user-riding", { state: { ride: response.data } });
             return;
           }
 
-          // Check for cancellation by Captain
           if (response.data.status === "cancelled") {
             setWaitingForDriver(false);
             setVehicleFound(false);
             setRide(null);
-            alert("Your ride was cancelled by the captain.");
+
+            if (response.data.cancellationReason !== "User cancelled") {
+              alert("Your ride was cancelled by the captain.");
+            }
             return;
           }
 
@@ -166,9 +165,8 @@ const UserHome = () => {
         }
       };
 
-      // Poll every 4 seconds
       const interval = setInterval(fetchRideStatus, 4000);
-      fetchRideStatus(); // Initial call
+      fetchRideStatus();
 
       return () => clearInterval(interval);
     }
@@ -193,7 +191,10 @@ const UserHome = () => {
           if (response.data.status === "cancelled") {
             setVehicleFound(false);
             setRide(null);
-            alert("Ride request cancelled.");
+
+            if (response.data.cancellationReason !== "User cancelled") {
+              alert("Ride request cancelled by captain/system.");
+            }
           }
         } catch (err) {
           console.error("Error polling acceptance:", err);

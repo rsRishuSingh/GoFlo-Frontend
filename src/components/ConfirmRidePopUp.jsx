@@ -1,11 +1,35 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { SocketContext } from "../context/SocketContext"; // 1. Import Socket Context
 
 const ConfirmRidePopUp = (props) => {
   const [otp, setOtp] = useState("");
   const navigate = useNavigate();
+  const { socket } = useContext(SocketContext); // 2. Get socket instance
   const isEmergency = props.ride?.isEmergency;
+
+  // --- REAL-TIME CANCELLATION LISTENER ---
+  useEffect(() => {
+    const handleRideCancelled = (data) => {
+      // Check if the cancelled ride matches the current ride context
+      // (Optional check depending on how specific your backend payload is)
+
+      alert("The user has cancelled this ride.");
+
+      // Close panels and return to map
+      props.setConfirmRidePopupPanel(false);
+      props.setRidePopupPanel(false);
+      navigate("/captain-home");
+    };
+
+    socket.on("ride-cancelled", handleRideCancelled);
+
+    // Cleanup listener on unmount
+    return () => {
+      socket.off("ride-cancelled", handleRideCancelled);
+    };
+  }, [socket, props, navigate]);
 
   const submitHander = async (e) => {
     e.preventDefault();
@@ -32,23 +56,24 @@ const ConfirmRidePopUp = (props) => {
     } catch (error) {
       console.error("Error starting ride:", error);
 
-      // --- LOGIC ADDED: Handle Cancellation while waiting ---
-      // If the backend returns an error (e.g. status is 'cancelled' instead of 'accepted')
-      if (error.response?.status === 400 || error.response?.status === 500) {
-        const message =
-          error.response?.data?.message ||
-          "Ride cannot be started (Check OTP or Ride Status)";
-        alert(message);
+      // --- FALLBACK: Handle Cancellation via API Response ---
+      // This catches cases where the socket event might have been missed
+      const status = error.response?.status;
+      const message = error.response?.data?.message || "";
 
-        // If the error message implies the ride is gone/cancelled, reset UI
+      if (status === 400 || status === 404 || status === 500) {
         if (
           message.includes("not found") ||
           message.includes("processed") ||
-          message.includes("status")
+          message.includes("status") ||
+          message.includes("cancelled")
         ) {
+          alert("Ride cancelled by user or invalid.");
           props.setConfirmRidePopupPanel(false);
           props.setRidePopupPanel(false);
-          navigate("/captain-home"); // Ensure we go back to map
+          navigate("/captain-home");
+        } else {
+          alert("Invalid OTP");
         }
       }
     }
@@ -79,6 +104,7 @@ const ConfirmRidePopUp = (props) => {
 
   return (
     <div className="h-full relative">
+      {/* Header */}
       <div className="mt-4 flex items-center justify-between border-b border-gray-100 pb-3">
         <h3
           className={`text-2xl font-bold ${
@@ -99,6 +125,7 @@ const ConfirmRidePopUp = (props) => {
         </span>
       </div>
 
+      {/* Ride/User Info Card */}
       <div
         className={`flex items-center justify-between p-4 rounded-xl mt-4 shadow-sm border ${
           isEmergency
@@ -133,6 +160,7 @@ const ConfirmRidePopUp = (props) => {
         </div>
       </div>
 
+      {/* Ride Trace (Pickup -> Dest) */}
       <div className="flex flex-col gap-y-4 mt-6 px-2">
         <div className="flex items-start gap-4">
           <div className="flex flex-col items-center gap-1 mt-1 relative">
@@ -160,6 +188,7 @@ const ConfirmRidePopUp = (props) => {
         </div>
       </div>
 
+      {/* OTP Form & Actions */}
       <div className="mt-6 w-full">
         <form onSubmit={submitHander}>
           <input

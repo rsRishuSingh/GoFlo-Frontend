@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
 const CaptainProtectWrapper = ({ children }) => {
-  const { captain, setCaptain } = useContext(CaptainDataContext);
+  const { setCaptain } = useContext(CaptainDataContext);
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
 
@@ -42,23 +42,20 @@ const CaptainProtectWrapper = ({ children }) => {
             );
 
             if (refreshResponse.status === 200) {
-             ;
+              const newCaptainToken = refreshResponse.data.captainToken;
 
-              // 3. Update Storage
-              localStorage.setItem(
-                "captainToken",
-                refreshResponse.data.captainToken,
-              );
+              // 2. Update Storage
+              localStorage.setItem("captainToken", newCaptainToken);
 
-              // 4. Retry Profile Fetch with NEW Token
+              // 3. Retry Profile Fetch with NEW Token
               const retryResponse = await axios.get(
                 `${import.meta.env.VITE_BASE_URL}/captains/profile`,
                 {
-                  headers: { Authorization: `Bearer ${newAccessToken}` },
+                  headers: { Authorization: `Bearer ${newCaptainToken}` },
                 },
               );
 
-              // 5. Success
+              // 4. Success
               setCaptain(retryResponse.data.captain);
               setIsLoading(false);
             }
@@ -68,6 +65,7 @@ const CaptainProtectWrapper = ({ children }) => {
             navigate("/captain-login");
           }
         } else {
+          // Handle other errors (e.g., invalid token format or other server errors)
           localStorage.removeItem("captainToken");
           navigate("/captain-login");
         }

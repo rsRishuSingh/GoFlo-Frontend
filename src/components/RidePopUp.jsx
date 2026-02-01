@@ -2,34 +2,42 @@ import React, { useState, useEffect } from "react";
 
 const RidePopUp = (props) => {
   const isEmergency = props.ride?.isEmergency;
-  const [timeLeft, setTimeLeft] = useState(30); // Initial time 10s
+  const [timeLeft, setTimeLeft] = useState(30);
+  const [isAccepting, setIsAccepting] = useState(false);
 
-  // Timer Logic
+  // 1. RESET STATE ON NEW RIDE (Fixes the "Processing..." bug)
   useEffect(() => {
-    if (!props.ride) return;
+    setIsAccepting(false); // Reset to false whenever a new ride object is received
+  }, [props.ride]);
 
-    setTimeLeft(30);
+  // 2. Timer Logic
+  useEffect(() => {
+    if (!props.ride || isAccepting) return;
+
+    setTimeLeft(30); // Reset timer
 
     const timerId = setInterval(() => {
-      setTimeLeft((prevTime) => {
-        if (prevTime <= 1) {
-          // Time is up!
-          clearInterval(timerId);
-          props.setRidePopupPanel(false); // Close Panel
-          props.setRide(null); // Clear Ride Data
-          return 0;
-        }
-        return prevTime - 1;
-      });
+      setTimeLeft((prevTime) => prevTime - 1);
     }, 1000);
 
-    // Cleanup interval on unmount or when ride changes
     return () => clearInterval(timerId);
-  }, [props.ride]);
+  }, [props.ride?._id, isAccepting]); // Use ID for dependency stability
+
+  // 3. Time Up Handler
+  useEffect(() => {
+    if (timeLeft <= 0 && !isAccepting) {
+      props.setRidePopupPanel(false);
+      setTimeout(() => props.setRide(null), 100);
+    }
+  }, [timeLeft, isAccepting]);
+
+  const handleAccept = () => {
+    setIsAccepting(true);
+    props.confirmRide();
+  };
 
   return (
     <div>
-      {/* Drag Handle */}
       <div
         className="absolute top-0 w-full flex justify-center py-2 cursor-pointer"
         onClick={() => {
@@ -39,7 +47,6 @@ const RidePopUp = (props) => {
         <div className="w-12 h-1.5 bg-gray-300 rounded-full"></div>
       </div>
 
-      {/* Header */}
       <div className="mt-6 flex items-center justify-between border-b border-gray-100 pb-2">
         <div className="flex flex-col">
           <h3
@@ -61,23 +68,31 @@ const RidePopUp = (props) => {
           </span>
         </div>
 
-        {/* TIMER UI */}
+        {/* Timer UI */}
         <div className="flex flex-col items-end">
-          <div className="w-12 h-12 rounded-full border-4 border-gray-100 flex items-center justify-center bg-white shadow-sm relative overflow-hidden">
-            <span
-              className={`text-lg font-bold ${timeLeft <= 3 ? "text-red-600" : "text-gray-800"}`}
-            >
-              {timeLeft}
-            </span>
-            {/* Optional visual progress ring effect could go here */}
+          <div
+            className={`w-12 h-12 rounded-full border-4 flex items-center justify-center bg-white shadow-sm relative overflow-hidden transition-colors duration-300 ${
+              isAccepting ? "border-green-500" : "border-gray-100"
+            }`}
+          >
+            {isAccepting ? (
+              <i className="ri-check-line text-green-500 text-xl font-bold"></i>
+            ) : (
+              <span
+                className={`text-lg font-bold ${
+                  timeLeft <= 5 ? "text-red-600" : "text-gray-800"
+                }`}
+              >
+                {timeLeft}
+              </span>
+            )}
           </div>
           <p className="text-[10px] text-gray-400 mt-1 font-medium">
-            Auto reject
+            {isAccepting ? "Accepting..." : "Auto reject"}
           </p>
         </div>
       </div>
 
-      {/* User & Fare Details */}
       <div
         className={`flex items-center justify-between p-3 rounded-xl mt-3 shadow-sm border ${
           isEmergency
@@ -114,7 +129,6 @@ const RidePopUp = (props) => {
         </div>
       </div>
 
-      {/* Ride Route Trace */}
       <div className="flex flex-col gap-y-2 mt-4 px-2">
         <div className="flex items-start gap-4">
           <div className="flex flex-col items-center gap-1 mt-1 relative">
@@ -147,7 +161,6 @@ const RidePopUp = (props) => {
         </div>
       </div>
 
-      {/* Action Buttons */}
       <div className="mt-3 w-full flex items-center justify-between gap-4">
         <button
           onClick={() => {
@@ -159,16 +172,21 @@ const RidePopUp = (props) => {
         </button>
 
         <button
-          onClick={() => {
-            props.confirmRide();
-          }}
+          onClick={handleAccept}
+          disabled={isAccepting}
           className={`flex-1 font-bold p-3.5 rounded-xl shadow-md transition-colors ${
-            isEmergency
-              ? "bg-red-600 text-white hover:bg-red-700"
-              : "bg-[#9aec00] text-gray-950 hover:bg-[#7ec200]"
+            isAccepting
+              ? "bg-gray-500 text-gray-200 cursor-not-allowed" // Neutral color when processing
+              : isEmergency
+                ? "bg-red-600 text-white hover:bg-red-700"
+                : "bg-[#9aec00] text-gray-950 hover:bg-[#7ec200]"
           }`}
         >
-          {isEmergency ? "Accept Emergency" : "Accept Ride"}
+          {isAccepting
+            ? "Processing..."
+            : isEmergency
+              ? "Accept Emergency"
+              : "Accept Ride"}
         </button>
       </div>
     </div>
