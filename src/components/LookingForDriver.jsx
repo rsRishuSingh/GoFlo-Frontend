@@ -9,49 +9,65 @@ const LookingForDriver = (props) => {
 
   return (
     <div>
-      <h5
-        className="p-1 text-center w-[93%] absolute top-0 cursor-pointer"
-        onClick={async () => {
-          props.setVehicleFound(false);
-          await props.cancelRide();
-        }}
-      >
-        <i className="text-3xl text-gray-300 ri-arrow-down-wide-line"></i>
+      <h5 className=" text-center w-[93%] absolute top-0">
+        <i className="text-5xl text-gray-400 ri-separator"></i>
       </h5>
-      <h3 className="text-2xl font-semibold mb-5">Looking for a Driver</h3>
+      <div className="flex items-center justify-between my-3 px-2">
+        <h3 className="text-2xl font-semibold ">Looking for a Driver </h3>
+        <div className="flex gap-1 mx-1 mt-2">
+          <span className="h-2.5 w-2.5 bg-[#9aec00] rounded-full animate-bounce [animation-delay:-0.3s]"></span>
+          <span className="h-2.5 w-2.5 bg-[#9aec00] rounded-full animate-bounce [animation-delay:-0.15s]"></span>
+          <span className="h-2.5 w-2.5 bg-[#9aec00] rounded-full animate-bounce"></span>
+        </div>
+      </div>
 
       <div className="flex gap-2 justify-between flex-col items-center">
         <img
-          className="w-40"
-          src={vehicleImages[props.vehicleType]}
+          className="w-36 mix-blend-multiply"
+          src={vehicleImages[props.vehicleType] || vehicleImages["car"]}
           alt="Vehicle"
         />
 
-        <div className="w-full mt-1">
-          <div className="flex items-center gap-x-5 gap-y-3 p-3 border-b-2">
-            <i className="ri-map-pin-user-fill text-lg text-green-600"></i>
-            <div>
-              <h3 className="text-lg font-medium">Pickup</h3>
-              <p className="text-sm text-gray-600">{props.pickup}</p>
+        <div className="flex flex-col gap-y-2 mt-4 px-2">
+          <div className="flex items-start gap-4">
+            <div className="flex flex-col items-center gap-1 mt-1 relative">
+              <div className="w-3 h-3 bg-green-600 rounded-full border-2 border-white shadow-sm"></div>
+              <div className="absolute top-4 w-0.5 h-17 bg-gray-300 border-l border-dashed border-gray-500"></div>
+            </div>
+            <div className="w-full border-b border-gray-100 pb-3">
+              <h3 className="text-lg font-semibold text-gray-900">Pickup</h3>
+              <p className="text-sm text-gray-500 leading-snug">
+                {props.pickup}
+              </p>
             </div>
           </div>
-          <div className="flex items-center gap-x-5 gap-y-3 p-3 border-b-2">
-            <i className="text-lg ri-map-pin-2-fill text-red-600"></i>
-            <div>
-              <h3 className="text-lg font-medium">Destination</h3>
-              <p className="text-sm text-gray-600">{props.destination}</p>
+
+          <div className="flex items-start gap-4">
+            <div className="flex flex-col items-center gap-1 mt-1">
+              <div className="w-3 h-3 bg-red-600 rounded-sm border-2 border-white shadow-sm"></div>
             </div>
-          </div>
-          <div className="flex items-center gap-x-5 gap-y-3 p-3">
-            <i className="ri-currency-line text-lg text-yellow-600"></i>
-            <div>
-              <h3 className="text-lg font-medium">
-                ₹{props.fare[props.vehicleType]}
+            <div className="w-full">
+              <h3 className="text-lg font-semibold text-gray-900">
+                Destination
               </h3>
-              <p className="text-sm text-gray-600">Cash</p>
+              <p className="text-sm text-gray-500 leading-snug">
+                {props.destination}
+              </p>
             </div>
           </div>
         </div>
+      </div>
+
+      <div className="mt-5 w-full mb-2">
+        <button
+          onClick={() => {
+            props.cancelRide();
+          }}
+          className="w-full bg-red-50 border border-red-100 text-red-600 font-bold p-3 rounded-xl hover:bg-red-600 hover:text-white transition-all duration-300 shadow-sm"
+        >
+          <i className="ri-close-line mr-2"></i>
+          Cancel Request
+        </button>
       </div>
     </div>
   );

@@ -72,7 +72,7 @@ const UserHome = () => {
   const cancelRide = async () => {
     if (!ride?._id) return;
     try {
-      await axios.post(
+      const response = await axios.post(
         `${import.meta.env.VITE_BASE_URL}/rides/cancel`,
         { rideId: ride._id },
         { headers: getAuthHeaders() },
@@ -82,6 +82,8 @@ const UserHome = () => {
       setWaitingForDriver(false);
       setRide(null);
       setPanelOpen(false);
+      console.log(response.data);
+
     } catch (error) {
       console.error("Error cancelling ride:", error);
       alert("Failed to cancel ride");

@@ -31,9 +31,26 @@ const ConfirmRidePopUp = (props) => {
       }
     } catch (error) {
       console.error("Error starting ride:", error);
-      alert(
-        error.response?.data?.message || "Invalid OTP or error starting ride.",
-      );
+
+      // --- LOGIC ADDED: Handle Cancellation while waiting ---
+      // If the backend returns an error (e.g. status is 'cancelled' instead of 'accepted')
+      if (error.response?.status === 400 || error.response?.status === 500) {
+        const message =
+          error.response?.data?.message ||
+          "Ride cannot be started (Check OTP or Ride Status)";
+        alert(message);
+
+        // If the error message implies the ride is gone/cancelled, reset UI
+        if (
+          message.includes("not found") ||
+          message.includes("processed") ||
+          message.includes("status")
+        ) {
+          props.setConfirmRidePopupPanel(false);
+          props.setRidePopupPanel(false);
+          navigate("/captain-home"); // Ensure we go back to map
+        }
+      }
     }
   };
 
@@ -82,7 +99,6 @@ const ConfirmRidePopUp = (props) => {
         </span>
       </div>
 
-      {/* Ride/User Info Card */}
       <div
         className={`flex items-center justify-between p-4 rounded-xl mt-4 shadow-sm border ${
           isEmergency
@@ -117,7 +133,6 @@ const ConfirmRidePopUp = (props) => {
         </div>
       </div>
 
-      {/* Ride Trace (Pickup -> Dest) */}
       <div className="flex flex-col gap-y-4 mt-6 px-2">
         <div className="flex items-start gap-4">
           <div className="flex flex-col items-center gap-1 mt-1 relative">
@@ -145,7 +160,6 @@ const ConfirmRidePopUp = (props) => {
         </div>
       </div>
 
-      {/* OTP Form & Actions */}
       <div className="mt-6 w-full">
         <form onSubmit={submitHander}>
           <input

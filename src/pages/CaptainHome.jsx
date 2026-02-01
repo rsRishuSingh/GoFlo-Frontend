@@ -26,7 +26,6 @@ const CaptainHome = () => {
   useEffect(() => {
     if (!captain?._id) return;
 
-    // A. Join Logic
     const joinCaptain = () => {
       socket.emit("join", {
         userId: captain._id,
@@ -34,10 +33,8 @@ const CaptainHome = () => {
       });
     };
 
-    // Emit immediately on mount
     joinCaptain();
 
-    // B. Location Logic
     const updateLocation = () => {
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition((position) => {
@@ -56,8 +53,6 @@ const CaptainHome = () => {
     const locationInterval = setInterval(updateLocation, 10000);
     updateLocation();
 
-    // C. Reconnection Handling (Crucial for stability)
-    // If the connection drops, we MUST re-join to update the socketId in DB
     socket.on("connect", joinCaptain);
     socket.on("reconnect", joinCaptain);
 
@@ -78,7 +73,6 @@ const CaptainHome = () => {
           { withCredentials: true },
         );
         localStorage.setItem("captainToken", response.data.captainToken);
-        console.log("Captain token refreshed", response.data.captainToken);
       } catch (err) {
         console.error("Session expired, please login again");
         navigate("/captain-login");
@@ -91,18 +85,17 @@ const CaptainHome = () => {
   // 3. Listen for New Rides
   useEffect(() => {
     socket.on("new-ride", (data) => {
-      console.log("New ride received:", data);
       setRide(data);
       setRidePopupPanel(true);
     });
 
-    // Cleanup listener on unmount
     return () => {
       socket.off("new-ride");
     };
   }, [socket]);
 
-  // 4. Confirm Ride Logic
+  // 4. Confirm Ride Logic (CRITICAL UPDATE HERE)
+
   async function confirmRide() {
     try {
       const response = await axios.post(
@@ -115,34 +108,40 @@ const CaptainHome = () => {
         },
       );
 
+      // ONLY OPEN PANEL IF SUCCESS
       if (response.status === 200) {
         setRidePopupPanel(false);
         setConfirmRidePopupPanel(true);
       }
     } catch (error) {
-      console.error("Error confirming ride:", error);
+      // IF ERROR (e.g. Taken), DO NOT OPEN PANEL
+      const message =
+        error.response?.data?.message || "Ride is no longer available.";
+      alert(message);
+      setRidePopupPanel(false);
+      setRide(null);
     }
   }
 
   // 5. Animations
-useGSAP(
-  function () {
-    if (ridePopupPanel) {
-      gsap.to(ridePopupPanelRef.current, {
-        y: 0,
-        duration: 0.5,
-        ease: "power4.out", // Smoother easing
-      });
-    } else {
-      gsap.to(ridePopupPanelRef.current, {
-        y: "100%",
-        duration: 0.5,
-        ease: "power4.in",
-      });
-    }
-  },
-  [ridePopupPanel],
-);
+  useGSAP(
+    function () {
+      if (ridePopupPanel) {
+        gsap.to(ridePopupPanelRef.current, {
+          y: 0,
+          duration: 0.5,
+          ease: "power4.out",
+        });
+      } else {
+        gsap.to(ridePopupPanelRef.current, {
+          y: "100%",
+          duration: 0.5,
+          ease: "power4.in",
+        });
+      }
+    },
+    [ridePopupPanel],
+  );
 
   useGSAP(
     function () {
@@ -192,6 +191,7 @@ useGSAP(
           setRidePopupPanel={setRidePopupPanel}
           setConfirmRidePopupPanel={setConfirmRidePopupPanel}
           confirmRide={confirmRide}
+          setRide={setRide}
         />
       </div>
 
@@ -207,6 +207,6 @@ useGSAP(
       </div>
     </div>
   );
-};
+};;
 
 export default CaptainHome;
