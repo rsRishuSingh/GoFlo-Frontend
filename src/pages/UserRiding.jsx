@@ -54,7 +54,6 @@ const UserRiding = () => {
         const updatedRide = response.data;
 
         if (updatedRide.status === "cancelled") {
-          localStorage.removeItem("currentRide");
           navigate("/user-home");
           return;
         }
@@ -62,7 +61,6 @@ const UserRiding = () => {
         setRide(updatedRide);
 
         if (updatedRide.status === "completed") {
-          localStorage.removeItem("currentRide");
           navigate("/user-home"); // Or to a rating screen
         }
       } catch (error) {
@@ -148,8 +146,8 @@ const UserRiding = () => {
   return (
     <div className="h-screen relative overflow-hidden">
       <img
-        className="w-24 absolute left-5 top-5 z-10  bg-white rounded-4xl p-2 shadow-md my-2"
-        src="https://upload.wikimedia.org/wikipedia/en/thumb/0/0f/Ola_Cabs_logo.svg/1280px-Ola_Cabs_logo.svg.png"
+        className="w-28 absolute left-5 top-5 z-10  bg-white rounded-4xl shadow-md my-2"
+        src="/logo.png"
         alt="Ola Logo"
       />
 
@@ -246,7 +244,7 @@ const UserRiding = () => {
 
       <div
         ref={paymentPanelRef}
-        className="absolute w-full z-20 bottom-0 translate-y-full bg-white px-3 py-10 pt-12 rounded-t-3xl shadow-2xl h-[35%]"
+        className="absolute w-full z-20 bottom-0 translate-y-full bg-white px-3 py-10 pt-12 rounded-t-3xl shadow-2xl h-[40%]"
       >
         {/* Close Handle */}
         <h5

@@ -158,8 +158,8 @@ const CaptainHome = () => {
     <div className="h-screen overflow-hidden relative">
       <div className=" absolute p-6 top-0 flex items-center justify-between w-full z-10">
         <img
-          className="w-24  bg-white rounded-4xl p-2 shadow-md"
-          src="https://upload.wikimedia.org/wikipedia/en/thumb/0/0f/Ola_Cabs_logo.svg/1280px-Ola_Cabs_logo.svg.png"
+          className="w-28  bg-white rounded-4xl shadow-md"
+          src="/logo.png"
           alt="Ola Logo"
         />
         <Link

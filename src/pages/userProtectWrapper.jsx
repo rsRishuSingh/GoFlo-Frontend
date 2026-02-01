@@ -30,7 +30,6 @@ const UserProtectWrapper = ({ children }) => {
           setIsLoading(false);
         }
       } catch (err) {
-        localStorage.removeItem("userToken");
           navigate("/user-login");
         }
     };

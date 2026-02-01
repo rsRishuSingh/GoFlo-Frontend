@@ -66,8 +66,8 @@ const UserLogin = () => {
     <div className="p-7 h-screen flex flex-col justify-between ">
       <div>
         <img
-          className="w-24 mb-5"
-          src="https://upload.wikimedia.org/wikipedia/en/thumb/0/0f/Ola_Cabs_logo.svg/1280px-Ola_Cabs_logo.svg.png"
+          className="w-28 mb-5"
+          src="/logo.png"
           alt="Ola Logo"
         />
 
@@ -82,7 +82,7 @@ const UserLogin = () => {
             placeholder="email@example.com"
             value={email}
             name="password"
-            autocomplete="current-email"
+            autoComplete="current-email"
             onChange={(e) => {
               setEmail(e.target.value);
               if (errors.email) setErrors({ ...errors, email: "" });
@@ -103,7 +103,7 @@ const UserLogin = () => {
             placeholder="Password"
             value={password}
             name="password"
-            autocomplete="current-email"
+            autoComplete="current-email"
             onChange={(e) => {
               setPassword(e.target.value);
               if (errors.password) setErrors({ ...errors, password: "" });

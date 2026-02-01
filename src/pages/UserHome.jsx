@@ -206,7 +206,6 @@ const UserHome = () => {
     }
   }, [vehicleFound, ride?._id]);
 
-
   // --- Suggestions & Geocoding Handlers ---
   const fetchSuggestions = async (input) => {
     try {
@@ -430,8 +429,8 @@ const UserHome = () => {
     <div className="h-screen relative w-full overflow-hidden">
       <div className="absolute left-5 top-5 z-10">
         <img
-          className="w-24  bg-white rounded-4xl p-2 shadow-md my-2"
-          src="https://upload.wikimedia.org/wikipedia/en/thumb/0/0f/Ola_Cabs_logo.svg/1280px-Ola_Cabs_logo.svg.png"
+          className="w-28  bg-white rounded-4xl  shadow-md my-2"
+          src="/logo.png"
           alt="Ola Logo"
         />
         <Link
@@ -529,7 +528,6 @@ const UserHome = () => {
               onChange={handlePickupChange}
               className="bg-gray-100 px-12 py-2 text-base rounded-lg w-full"
               placeholder="Add a pick-up location"
-              
             />
             <input
               onClick={() => {

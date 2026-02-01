@@ -42,7 +42,6 @@ const CaptainRiding = () => {
           },
         );
         if (res.data.status === "cancelled") {
-          localStorage.removeItem("captainCurrentRide");
           navigate("/captain-home");
           alert("User cancelled the ride.");
         }
@@ -53,7 +52,6 @@ const CaptainRiding = () => {
 
     const interval = setInterval(checkStatus, 5000);
     socket.on("ride-cancelled", () => {
-      localStorage.removeItem("captainCurrentRide");
       navigate("/captain-home");
     });
 
@@ -84,8 +82,8 @@ const CaptainRiding = () => {
   return (
     <div className="h-screen relative overflow-hidden bg-gray-100">
       <img
-        className="w-24 absolute left-5 top-5 z-10  bg-white rounded-4xl p-2 shadow-md my-2"
-        src="https://upload.wikimedia.org/wikipedia/en/thumb/0/0f/Ola_Cabs_logo.svg/1280px-Ola_Cabs_logo.svg.png"
+        className="w-28 absolute left-5 top-5 z-10  bg-white rounded-4xl  shadow-md my-2"
+        src="/logo.png"
         alt="Ola Logo"
       />
 

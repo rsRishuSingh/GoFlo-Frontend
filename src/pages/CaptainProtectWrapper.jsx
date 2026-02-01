@@ -31,7 +31,6 @@ const CaptainProtectWrapper = ({ children }) => {
         }
       } catch (err) {
         console.log("Captain Auth Failed. Attempting Refresh...", err);
-        localStorage.removeItem("captainToken");
         navigate("/captain-login");
       }
     };
