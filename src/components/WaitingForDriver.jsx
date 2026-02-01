@@ -47,7 +47,7 @@ const WaitingForDriver = (props) => {
         <div className="flex flex-col items-center w-1/3 border-l border-gray-200 pl-2">
           <div className="w-10 h-10 rounded-full overflow-hidden border border-gray-300 mb-1">
             <img
-              src="https://media.istockphoto.com/id/1413761196/photo/happy-mature-man-driving-car.jpg?s=612x612&w=0&k=20&c=cHortB6t2CuIicx-UzOiq2jyfXufja9vETTN9dmThG4="
+              src="/rider.jpg"
               alt="driver"
               className="w-full h-full object-cover"
             />

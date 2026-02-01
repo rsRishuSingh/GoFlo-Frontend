@@ -109,9 +109,18 @@ const UserRiding = () => {
   // GSAP Animation for Payment Panel
   useGSAP(() => {
     if (isPaymentPanelOpen) {
-      gsap.to(paymentPanelRef.current, { y: "0%" });
+      gsap.to(paymentPanelRef.current, {
+        y: "0%",
+        duration: 0.5,
+        ease: "power4.out", // Smoother easing
+      });
+      
     } else {
-      gsap.to(paymentPanelRef.current, { y: "100%" });
+      gsap.to(paymentPanelRef.current, {
+        y: "100%",
+        duration: 0.5,
+        ease: "power4.in",
+      });
     }
   }, [isPaymentPanelOpen]);
 
@@ -146,7 +155,7 @@ const UserRiding = () => {
         <i className="ri-home-5-line text-lg font-bold text-green-600"></i>
       </button>
 
-      <div className="h-[60%]">
+      <div className="h-[65%]">
         <LiveRouteTracking
           destination={destinationCoords}
           isCaptain={false}
@@ -155,7 +164,7 @@ const UserRiding = () => {
         />
       </div>
 
-      <div className="h-[40%] p-4 bg-white relative z-10 rounded-t-3xl shadow-[0_-5px_15px_rgba(0,0,0,0.1)] flex flex-col justify-between">
+      <div className="h-[35%] p-4 bg-white relative z-10 rounded-t-3xl shadow-[0_-5px_15px_rgba(0,0,0,0.1)] flex flex-col justify-between">
         <div className="flex items-center justify-between mb-1">
           <div className="flex items-center gap-3">
             <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center relative overflow-hidden border border-gray-200">
@@ -185,10 +194,24 @@ const UserRiding = () => {
         </div>
 
         <div className="w-full bg-green-50 border border-green-100 p-2 rounded-lg flex items-center gap-1 mb-1">
-          <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+          <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse mx-2"></div>
           <p className="text-xs font-semibold text-green-800">
             Ride in Progress - Sharing Live Location
           </p>
+        </div>
+
+        <div className="w-full bg-yellow-50 border border-green-100 p-2 rounded-lg flex items-center gap-1 mb-1 justify-start">
+          <div className="w-2 h-2 bg-yellow-500 rounded-full animate-pulse mx-2"></div>
+          <div>
+            <div className="text-xs font-semibold text-yellow-800">
+              Est. Time: {ride?.duration ? (ride.duration / 60).toFixed(0) : 0}{" "}
+              mins
+            </div>
+            <div className="text-xs font-semibold text-yellow-800">
+              Distance: {ride?.distance ? (ride.distance / 1000).toFixed(1) : 0}{" "}
+              km
+            </div>
+          </div>
         </div>
 
         <div className="flex items-center gap-1 border-t border-gray-100 pt-1">
@@ -223,7 +246,7 @@ const UserRiding = () => {
 
       <div
         ref={paymentPanelRef}
-        className="fixed w-full z-20 bottom-0 translate-y-full bg-white px-3 py-10 pt-12 rounded-t-3xl shadow-2xl h-[40%]"
+        className="absolute w-full z-20 bottom-0 translate-y-full bg-white px-3 py-10 pt-12 rounded-t-3xl shadow-2xl h-[35%]"
       >
         {/* Close Handle */}
         <h5

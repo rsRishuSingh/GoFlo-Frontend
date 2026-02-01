@@ -453,7 +453,7 @@ const UserHome = () => {
           to="/user-logout"
           className="h-10 w-10 mt-5 bg-white flex items-center justify-center rounded-full shadow-md"
         >
-          <i class="text-xl font-medium ri-logout-box-line"></i>
+          <i className="text-xl font-medium ri-logout-box-line"></i>
         </Link>
       </div>
 

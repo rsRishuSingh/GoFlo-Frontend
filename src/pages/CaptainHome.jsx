@@ -125,20 +125,24 @@ const CaptainHome = () => {
   }
 
   // 5. Animations
-  useGSAP(
-    function () {
-      if (ridePopupPanel) {
-        gsap.to(ridePopupPanelRef.current, {
-          transform: "translateY(0)",
-        });
-      } else {
-        gsap.to(ridePopupPanelRef.current, {
-          transform: "translateY(100%)",
-        });
-      }
-    },
-    [ridePopupPanel],
-  );
+useGSAP(
+  function () {
+    if (ridePopupPanel) {
+      gsap.to(ridePopupPanelRef.current, {
+        y: 0,
+        duration: 0.5,
+        ease: "power4.out", // Smoother easing
+      });
+    } else {
+      gsap.to(ridePopupPanelRef.current, {
+        y: "100%",
+        duration: 0.5,
+        ease: "power4.in",
+      });
+    }
+  },
+  [ridePopupPanel],
+);
 
   useGSAP(
     function () {
@@ -181,7 +185,7 @@ const CaptainHome = () => {
 
       <div
         ref={ridePopupPanelRef}
-        className="absolute w-full z-20 bottom-0 translate-y-full bg-white px-3 py-10 pt-12 rounded-t-3xl shadow-2xl"
+        className="absolute w-full z-20 bottom-0 translate-y-full bg-white px-3 py-5 pt-5 rounded-t-3xl shadow-2xl"
       >
         <RidePopUp
           ride={ride}

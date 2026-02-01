@@ -21,7 +21,7 @@ const CaptainDetails = () => {
         <div className="flex items-center justify-start gap-3">
           <img
             className="h-16 w-16 rounded-full object-cover border-4 border-gray-100 shadow-sm"
-            src="https://media.istockphoto.com/id/1413761196/photo/happy-mature-man-driving-car.jpg?s=612x612&w=0&k=20&c=cHortB6t2CuIicx-UzOiq2jyfXufja9vETTN9dmThG4="
+            src="/rider.jpg"
             alt="driver"
           />
 
@@ -55,7 +55,7 @@ const CaptainDetails = () => {
         <div className="h-10 w-px bg-gray-200"></div>
 
         <div className="text-center w-1/3">
-          <i class=" text-2xl mb-1 ri-route-fill text-red-500"></i>
+          <i className=" text-2xl mb-1 ri-route-fill text-red-500"></i>
           <h5 className="text-lg font-bold text-gray-900">30 KM</h5>
           <p className="text-xs text-gray-500 font-medium">Total Distance</p>
         </div>

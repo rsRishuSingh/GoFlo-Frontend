@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 const ConfirmRidePopUp = (props) => {
   const [otp, setOtp] = useState("");
   const navigate = useNavigate();
+  const isEmergency = props.ride?.isEmergency;
 
   const submitHander = async (e) => {
     e.preventDefault();
@@ -18,7 +19,6 @@ const ConfirmRidePopUp = (props) => {
         },
         {
           headers: {
-            // FIXED: Using captainToken for the Captain's request
             Authorization: `Bearer ${localStorage.getItem("captainToken")}`,
           },
         },
@@ -27,7 +27,6 @@ const ConfirmRidePopUp = (props) => {
       if (response.status === 200) {
         props.setConfirmRidePopupPanel(false);
         props.setRidePopupPanel(false);
-        // Pass response.data to ensure the 'ongoing' status is reflected
         navigate("/captain-riding", { state: { ride: response.data } });
       }
     } catch (error) {
@@ -63,85 +62,120 @@ const ConfirmRidePopUp = (props) => {
 
   return (
     <div className="h-full relative">
-      <h5
-        className="p-1 text-center w-full cursor-pointer"
-        onClick={() => {
-          props.setRidePopupPanel(true);
-          props.setConfirmRidePopupPanel(false);
-        }}
-      >
-        <i className="text-3xl text-gray-300 ri-arrow-down-wide-line"></i>
-      </h5>
-
-      <h3 className="text-2xl font-semibold mb-5">
-        Confirm this ride to Start
-      </h3>
-
-      <div className="flex items-center justify-between p-3 bg-yellow-400 rounded-lg mt-4 shadow-sm">
-        <div className="flex items-center gap-3 ">
-          <img
-            className="h-12 w-12 rounded-full object-cover"
-            src="https://i.pinimg.com/236x/af/26/28/af26280b0ca305be47df0b799ed1b12b.jpg"
-            alt="User Avatar"
-          />
-          <h2 className="text-lg font-medium capitalize">
-            {props.ride?.user?.fullname?.firstname}
-          </h2>
-        </div>
-        <h5 className="text-lg font-semibold">2.2 KM</h5>
+      <div className="mt-4 flex items-center justify-between border-b border-gray-100 pb-3">
+        <h3
+          className={`text-2xl font-bold ${
+            isEmergency ? "text-red-600 animate-pulse" : "text-gray-900"
+          }`}
+        >
+          {isEmergency ? (
+            <span className="flex items-center gap-2">
+              <i className="ri-alarm-warning-fill"></i> CONFIRM EMERGENCY
+            </span>
+          ) : (
+            "Confirm to Start"
+          )}
+        </h3>
+        <span className="bg-gray-100 text-gray-600 px-3 py-1 rounded-full text-xs font-semibold shadow-sm">
+          {props.ride?.distance ? (props.ride.distance / 1000).toFixed(1) : 0}{" "}
+          km
+        </span>
       </div>
 
-      <div className="flex gap-2 justify-between flex-col items-center">
-        <div className="w-full mt-5">
-          <div className="flex items-center gap-5 p-3 border-b-2">
-            <i className="ri-map-pin-user-fill text-lg"></i>
-            <div>
-              <h3 className="text-lg font-medium">Pickup</h3>
-              <p className="text-sm -mt-1 text-gray-600">
-                {props.ride?.origin?.location_name}
-              </p>
-            </div>
+      {/* Ride/User Info Card */}
+      <div
+        className={`flex items-center justify-between p-4 rounded-xl mt-4 shadow-sm border ${
+          isEmergency
+            ? "bg-red-50 border-red-200"
+            : "bg-[#e2e2e2] border-gray-200"
+        }`}
+      >
+        <div className="flex items-center gap-4">
+          <img
+            className="h-14 w-14 rounded-full object-cover border-2 border-white shadow-md"
+            src="/rider.jpg"
+            alt="User Avatar"
+          />
+          <div>
+            <h2 className="text-lg font-bold capitalize text-gray-900">
+              {props.ride?.user?.fullname.firstname}
+            </h2>
+            <p
+              className={`text-sm font-semibold ${
+                isEmergency ? "text-red-600" : "text-gray-500"
+              }`}
+            >
+              {props.ride?.paymentMethod === "cash" ? "Cash Payment" : "Online"}
+            </p>
           </div>
-          <div className="flex items-center gap-5 p-3 border-b-2">
-            <i className="ri-map-pin-2-fill text-lg"></i>
-            <div>
-              <h3 className="text-lg font-medium">Destination</h3>
-              <p className="text-sm -mt-1 text-gray-600">
-                {props.ride?.destination?.location_name}
-              </p>
-            </div>
+        </div>
+        <div className="text-right">
+          <h5 className="text-xl font-bold text-gray-900">
+            ₹{props.ride?.fare}
+          </h5>
+          <span className="text-xs text-gray-500">Earnings</span>
+        </div>
+      </div>
+
+      {/* Ride Trace (Pickup -> Dest) */}
+      <div className="flex flex-col gap-y-4 mt-6 px-2">
+        <div className="flex items-start gap-4">
+          <div className="flex flex-col items-center gap-1 mt-1 relative">
+            <div className="w-3 h-3 bg-green-600 rounded-full border-2 border-white shadow-sm"></div>
+            <div className="absolute top-4 w-0.5 h-18 bg-gray-300 border-l border-dashed border-gray-500"></div>{" "}
           </div>
-          <div className="flex items-center gap-5 p-3">
-            <i className="ri-currency-line text-lg"></i>
-            <div>
-              <h3 className="text-lg font-medium">₹{props.ride?.fare} </h3>
-              <p className="text-sm -mt-1 text-gray-600">Cash</p>
-            </div>
+          <div className="w-full border-b border-gray-100 pb-3">
+            <h3 className="text-lg font-semibold text-gray-900">Pickup</h3>
+            <p className="text-sm text-gray-500 leading-snug">
+              {props.ride?.origin?.location_name}
+            </p>
           </div>
         </div>
 
-        <div className="mt-6 w-full">
-          <form onSubmit={submitHander}>
-            <input
-              value={otp}
-              onChange={(e) => setOtp(e.target.value)}
-              type="text"
-              className="bg-[#eee] px-6 py-4 font-mono text-lg rounded-lg w-full mt-3 placeholder:text-base"
-              placeholder="Enter OTP"
-            />
+        <div className="flex items-start gap-4">
+          <div className="flex flex-col items-center gap-1 mt-1">
+            <div className="w-3 h-3 bg-red-600 rounded-sm border-2 border-white shadow-sm"></div>
+          </div>
+          <div className="w-full">
+            <h3 className="text-lg font-semibold text-gray-900">Destination</h3>
+            <p className="text-sm text-gray-500 leading-snug">
+              {props.ride?.destination?.location_name}
+            </p>
+          </div>
+        </div>
+      </div>
 
-            <button className="w-full mt-5 text-lg flex justify-center bg-green-600 text-white font-semibold p-3 rounded-lg shadow-md hover:bg-green-700 transition">
-              Confirm
+      {/* OTP Form & Actions */}
+      <div className="mt-6 w-full">
+        <form onSubmit={submitHander}>
+          <input
+            value={otp}
+            onChange={(e) => setOtp(e.target.value)}
+            type="text"
+            className="bg-gray-100 px-6 py-4 font-mono text-lg rounded-xl w-full border border-gray-200 focus:outline-none focus:ring-2 focus:ring-green-500 placeholder:text-gray-400"
+            placeholder="Enter 4-digit OTP"
+            maxLength="4"
+          />
+
+          <div className="flex flex-col gap-3 mt-4">
+            <button
+              className={`w-full text-lg flex justify-center  font-bold p-3.5 rounded-xl shadow-md transition-colors ${
+                isEmergency
+                  ? "bg-red-600 text-white hover:bg-red-700"
+                  : "bg-[#9aec00] text-gray-950 hover:bg-[#7ec200]"
+              }`}
+            >
+              Start Ride
             </button>
 
             <button
               onClick={cancelRide}
-              className="w-full mt-2 bg-red-600 text-lg text-white font-semibold p-3 rounded-lg hover:bg-red-700 transition"
+              className="w-full bg-white border-2 border-red-500 text-lg text-red-500 font-bold p-3.5 rounded-xl hover:bg-red-50 transition-colors"
             >
-              Cancel
+              Cancel Ride
             </button>
-          </form>
-        </div>
+          </div>
+        </form>
       </div>
     </div>
   );
