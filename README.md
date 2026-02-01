@@ -5,7 +5,7 @@ Welcome to the frontend documentation for the Ride Hailing application. This is 
 ## 🚀 Deployment
 
 The frontend is deployed at:
-[netlify](https://goflo.netlify.app/)
+(https://goflo.netlify.app/)
 
 ---
 
