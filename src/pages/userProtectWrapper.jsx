@@ -16,7 +16,6 @@ const UserProtectWrapper = ({ children }) => {
         navigate("/user-login");
         return;
       }
-
       try {
         const response = await axios.get(
           `${import.meta.env.VITE_BASE_URL}/users/profile`,
