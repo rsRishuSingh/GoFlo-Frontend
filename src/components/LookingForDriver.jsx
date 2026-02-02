@@ -32,7 +32,7 @@ const LookingForDriver = (props) => {
           <div className="flex items-start gap-4">
             <div className="flex flex-col items-center gap-1 mt-1 relative">
               <div className="w-3 h-3 bg-green-600 rounded-full border-2 border-white shadow-sm"></div>
-              <div className="absolute top-4 w-0.5 h-17 bg-gray-300 border-l border-dashed border-gray-500"></div>
+              <div className="absolute top-4 w-0.5 h-15 bg-gray-300 border-l border-dashed border-gray-500"></div>
             </div>
             <div className="w-full border-b border-gray-100 pb-3">
               <h3 className="text-lg font-semibold text-gray-900">Pickup</h3>

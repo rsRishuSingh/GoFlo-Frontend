@@ -151,7 +151,7 @@ const UserRiding = () => {
         alt="Ola Logo"
       />
 
-      <div className="h-[60%]">
+      <div className="h-[50%]">
         <LiveRouteTracking
           destination={destinationCoords}
           isCaptain={false}
@@ -160,7 +160,7 @@ const UserRiding = () => {
         />
       </div>
 
-      <div className="h-[40%] py-4 px-2 bg-white relative z-10 rounded-t-3xl shadow-[0_-5px_15px_rgba(0,0,0,0.1)] flex flex-col justify-between">
+      <div className="h-[50%] py-4 px-2 bg-white relative z-10 rounded-t-3xl shadow-[0_-5px_15px_rgba(0,0,0,0.1)] flex flex-col justify-between">
         <div className="flex items-center justify-between mb-1">
           <div className="flex items-center gap-3">
             <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center relative overflow-hidden border border-gray-200">

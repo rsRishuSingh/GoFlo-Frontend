@@ -22,7 +22,6 @@ const CaptainHome = () => {
   const { captain } = useContext(CaptainDataContext);
   const navigate = useNavigate();
 
-  // 1. Socket Connection & Location Updates
   useEffect(() => {
     if (!captain?._id) return;
 
@@ -63,33 +62,26 @@ const CaptainHome = () => {
     };
   }, [captain, socket]);
 
- 
-
-  // 3. Listen for New Rides AND Cancellations
   useEffect(() => {
-    // A. Handle New Ride
+    
     socket.on("new-ride", (data) => {
       setRide(data);
       setRidePopupPanel(true);
     });
 
-    // B. Handle Ride Cancellation (Real-time update)
     socket.on("ride-cancelled", (data) => {
-      // If the cancelled ride matches the one currently shown
       setRidePopupPanel(false);
-      setConfirmRidePopupPanel(false); // Also close confirm panel if open
+      setConfirmRidePopupPanel(false); 
       setRide(null);
     });
 
-    // Cleanup listeners
     return () => {
       socket.off("new-ride");
       socket.off("ride-cancelled");
     };
   }, [socket]);
 
-  // 4. Confirm Ride Logic
-  // Inside CaptainHome.jsx
+
 
   async function confirmRide() {
     try {
@@ -116,10 +108,9 @@ const CaptainHome = () => {
 
       setRidePopupPanel(false);
       setConfirmRidePopupPanel(false);
-      setRide(null); 
+      setRide(null);
     }
   }
-  // 5. Animations
   useGSAP(
     function () {
       if (ridePopupPanel) {
@@ -203,6 +194,6 @@ const CaptainHome = () => {
       </div>
     </div>
   );
-};;
+};
 
 export default CaptainHome;

@@ -16,6 +16,7 @@ export const UserLogout = () => {
       .then((response) => {
         if (response.status === 200) {
           localStorage.removeItem("userToken");
+          localStorage.removeItem("captainToken");
           navigate("/user-login");
         }
       })
@@ -23,6 +24,7 @@ export const UserLogout = () => {
         console.error("Logout failed:", error);
         // Even if the server fails, we clear the token client-side
         localStorage.removeItem("userToken");
+        localStorage.removeItem("captainToken");
         navigate("/user-login");
       });
   }, [userToken, navigate]);

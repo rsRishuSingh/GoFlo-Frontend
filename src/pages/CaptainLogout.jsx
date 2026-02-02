@@ -16,12 +16,14 @@ export const CaptainLogout = () => {
       .then((response) => {
         if (response.status === 200) {
           localStorage.removeItem("captainToken");
+          localStorage.removeItem("userToken");
           navigate("/captain-login");
         }
       })
       .catch((error) => {
         console.error("Logout failed:", error);
         localStorage.removeItem("captainToken");
+        localStorage.removeItem("userToken");
         navigate("/captain-login");
       });
   }, [captainToken, navigate]);

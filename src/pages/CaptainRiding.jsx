@@ -87,7 +87,7 @@ const CaptainRiding = () => {
         alt="Ola Logo"
       />
 
-      <div className="h-[60%] relative z-0">
+      <div className="h-[50%] relative z-0">
         <LiveRouteTracking
           destination={{
             lat: rideData.destination.ltd,
@@ -97,7 +97,7 @@ const CaptainRiding = () => {
         />
       </div>
 
-      <div className="h-[40%] p-6 bg-white rounded-t-3xl shadow-[0_-5px_15px_rgba(0,0,0,0.1)] relative z-10 flex flex-col justify-between">
+      <div className="h-[50%] p-6 bg-white rounded-t-3xl shadow-[0_-5px_15px_rgba(0,0,0,0.1)] relative z-10 flex flex-col justify-between">
         <div className="flex items-center justify-between mb-2 pb-1">
           <h4 className="text-xl font-bold text-gray-800">
             {rideData.distance ? (rideData.distance / 1000).toFixed(1) : "2.2"}{" "}
