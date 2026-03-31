@@ -3,7 +3,7 @@ import React from "react";
 const LookingForDriver = (props) => {
   const vehicleImages = {
     car: "/olaCar.png",
-    moto: "/olaBike.png",
+    ambulance: "/olaAmbulance.png",
     auto: "/olaAuto.png",
   };
 

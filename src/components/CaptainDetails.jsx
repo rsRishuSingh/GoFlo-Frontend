@@ -7,7 +7,7 @@ const CaptainDetails = () => {
   // 1. Map vehicle types to your public folder image paths
   const vehicleImages = {
     car: "/olaCar.png",
-    moto: "/olaBike.png",
+    ambulance: "/olaAmbulance.png",
     auto: "/olaAuto.png",
   };
 

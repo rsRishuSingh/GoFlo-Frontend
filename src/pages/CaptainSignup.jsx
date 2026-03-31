@@ -231,7 +231,7 @@ const CaptainSignup = () => {
                 </option>
                 <option value="car">Car</option>
                 <option value="auto">Auto</option>
-                <option value="moto">Bike</option>
+                <option value="ambulance">Ambulance</option>
               </select>
               <div className="min-h-5 ">
                 {errors.vehicleType && (

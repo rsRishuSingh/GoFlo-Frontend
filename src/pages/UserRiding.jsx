@@ -17,7 +17,7 @@ const UserRiding = () => {
   // Vehicle Images Map
   const vehicleImages = {
     car: "/olaCar.png",
-    moto: "/olaBike.png",
+    ambulance: "/olaAmbulance.png",
     auto: "/olaAuto.png",
   };
 

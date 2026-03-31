@@ -4,7 +4,7 @@ const ConfirmRide = (props) => {
   
   const vehicleImages = {
     car: "/olaCar.png",
-    moto: "/olaBike.png",
+    ambulance: "/olaAmbulance.png",
     auto: "/olaAuto.png",
   };
 

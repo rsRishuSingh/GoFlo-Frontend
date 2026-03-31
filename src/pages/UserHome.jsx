@@ -350,7 +350,7 @@ const UserHome = () => {
         {
           origin: originData,
           destination: hospital,
-          vehicleType: "car",
+          vehicleType: "ambulance",
           isEmergency: true,
         },
         { headers: getAuthHeaders() },
@@ -359,8 +359,8 @@ const UserHome = () => {
       if (rideResponse.status === 201) {
         setPickup(originData.location_name);
         setDestination(hospital.location_name);
-        setVehicleType("car");
-        setFare({ car: rideResponse.data.fare });
+        setVehicleType("ambulance");
+        setFare({ ambulance: rideResponse.data.fare });
 
         setRide(rideResponse.data);
         setVehicleFound(true);

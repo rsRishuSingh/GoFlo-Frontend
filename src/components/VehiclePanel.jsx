@@ -37,28 +37,28 @@ const VehiclePanel = (props) => {
       <div
         onClick={() => {
           props.setConfirmRidePanel(true);
-          props.selectVehicle("moto");
+          props.selectVehicle("ambulance");
         }}
         className="flex border-2 active:border-black mb-2 rounded-xl w-full p-3 items-center justify-between hover:border-black cursor-pointer transition-all"
       >
         <img
           className="w-20"
-          src="/olaBike.png"
-          alt="Moto"
+          src="/olaAmbulance.png"
+          alt="Ambulance"
         />
         <div className="-ml-2 w-1/2">
           <h4 className="font-medium text-base">
-            GoMoto{" "}
+            GoAmbulance{" "}
             <span>
-              <i className="ri-user-3-fill"></i>1
+              <i className="ri-user-3-fill"></i>2
             </span>
           </h4>
-          <h5 className="font-medium text-sm">3 mins away </h5>
+          <h5 className="font-medium text-sm">5 mins away </h5>
           <p className="font-normal text-xs text-gray-600">
-            Affordable motorcycle rides
+            Emergency medical assistance
           </p>
         </div>
-        <h2 className="text-lg font-semibold">₹{props.fare.moto}</h2>
+        <h2 className="text-lg font-semibold">₹{props.fare.ambulance}</h2>
       </div>
       <div
         onClick={() => {
