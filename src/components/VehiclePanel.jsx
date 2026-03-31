@@ -41,11 +41,7 @@ const VehiclePanel = (props) => {
         }}
         className="flex border-2 active:border-black mb-2 rounded-xl w-full p-3 items-center justify-between hover:border-black cursor-pointer transition-all"
       >
-        <img
-          className="w-20"
-          src="/olaAmbulance.png"
-          alt="Ambulance"
-        />
+        <img className="w-20" src="/olaAmbulance.png" alt="Ambulance" />
         <div className="-ml-2 w-1/2">
           <h4 className="font-medium text-base">
             GoAmbulance{" "}
@@ -67,11 +63,7 @@ const VehiclePanel = (props) => {
         }}
         className="flex border-2 active:border-black mb-2 rounded-xl w-full p-3 items-center justify-between hover:border-black cursor-pointer transition-all"
       >
-        <img
-          className="w-19"
-          src="/olaAuto.png"
-          alt="UberAuto"
-        />
+        <img className="w-19" src="/olaAuto.png" alt="UberAuto" />
         <div className="ml-2 w-1/2">
           <h4 className="font-medium text-base">
             GoAuto{" "}

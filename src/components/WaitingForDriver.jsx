@@ -11,7 +11,7 @@ const WaitingForDriver = (props) => {
   const vehicleImageSrc = vehicleImages[vehicleType] || vehicleImages["car"];
 
   return (
-    <div >
+    <div>
       <h5 className=" text-center w-[93%] absolute top-0">
         <i className="text-5xl text-gray-400 ri-separator"></i>
       </h5>

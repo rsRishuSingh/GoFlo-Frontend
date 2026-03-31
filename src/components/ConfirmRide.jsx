@@ -1,7 +1,6 @@
 import React from "react";
 
 const ConfirmRide = (props) => {
-  
   const vehicleImages = {
     car: "/olaCar.png",
     ambulance: "/olaAmbulance.png",

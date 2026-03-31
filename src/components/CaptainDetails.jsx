@@ -16,7 +16,6 @@ const CaptainDetails = () => {
 
   return (
     <div className="h-full flex flex-col justify-start gap-5">
-     
       <div className="flex items-center justify-between">
         <div className="flex items-center justify-start gap-3">
           <img
