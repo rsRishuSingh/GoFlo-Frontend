@@ -13,10 +13,17 @@ import LookingForDriver from "../components/LookingForDriver";
 import WaitingForDriver from "../components/WaitingForDriver";
 import LiveTracking from "../components/LiveTracking";
 import LiveRouteTracking from "../components/LiveRouteTracking";
+import HelpButton from "../components/HelpButton";
+import HelpRequestModal from "../components/HelpRequestModal";
+import HelpAcceptancePanel from "../components/HelpAcceptancePanel";
+import HelpInProgressPanel from "../components/HelpInProgressPanel";
 
 // Context
 import { SocketContext } from "../context/SocketContext";
 import { UserDataContext } from "../context/UserContext";
+
+// Firebase Service
+import { initFCM, listenToMessages } from "../services/firebaseService";
 
 const UserHome = () => {
   // --- State Management ---
@@ -30,6 +37,7 @@ const UserHome = () => {
   const [vehicleType, setVehicleType] = useState(null);
   const [ride, setRide] = useState(null);
   const [rideCoordinates, setRideCoordinates] = useState(null);
+  const [helpModalOpen, setHelpModalOpen] = useState(false);
 
   // --- Panel States ---
   const [panelOpen, setPanelOpen] = useState(false);
@@ -50,7 +58,154 @@ const UserHome = () => {
   // --- Hooks ---
   const navigate = useNavigate();
   const { socket } = useContext(SocketContext);
-  const { user } = useContext(UserDataContext);
+  const {
+    user,
+    incomingHelpRequest,
+    setIncomingHelpRequest,
+    activeHelpRequest,
+    helpRequestStatus,
+    setHelpRequestStatus,
+    acceptHelpRequest,
+    declineHelpRequest,
+  } = useContext(UserDataContext);
+
+  // --- Side Effects ---
+
+  // 0. Initialize Firebase Cloud Messaging
+  useEffect(() => {
+    const initializeFirebase = async () => {
+      try {
+        const token = await initFCM("user");
+        if (token) {
+          console.log("Firebase initialized with token:", token);
+        }
+      } catch (error) {
+        console.error("Error initializing Firebase:", error);
+      }
+    };
+
+    if (user?._id) {
+      initializeFirebase();
+    }
+  }, [user?._id]);
+
+  // Listen for incoming help notifications
+  useEffect(() => {
+    listenToMessages((notification) => {
+      console.log("Help notification received:", notification);
+
+      if (notification?.data?.action === "open_help_request") {
+        const helpRequestData = {
+          helpRequestId: notification.data.help_request_id,
+          requesterName: notification.data.requester_name,
+          requesterLocation: {
+            type: "Point",
+            coordinates: [
+              parseFloat(notification.data.requester_location_lng),
+              parseFloat(notification.data.requester_location_lat),
+            ],
+          },
+          acceptorsCount: 0,
+        };
+
+        setIncomingHelpRequest(helpRequestData);
+        setHelpRequestStatus({
+          helpRequestId: notification.data.help_request_id,
+          status: "pending",
+          acceptorCount: 0,
+        });
+      }
+    });
+  }, [setIncomingHelpRequest, setHelpRequestStatus]);
+
+  // Listen for service-worker push click messages (if app was opened by notification click)
+  useEffect(() => {
+    const handleSwMessage = (event) => {
+      if (!event?.data) return;
+
+      const { action, data } = event.data;
+      if (action === "accept_help" || action === "open_help_request") {
+        const helpRequestData = {
+          helpRequestId: data.help_request_id,
+          requesterName: data.requester_name,
+          requesterLocation: {
+            type: "Point",
+            coordinates: [
+              parseFloat(data.requester_location_lng),
+              parseFloat(data.requester_location_lat),
+            ],
+          },
+          acceptorsCount: 0,
+        };
+
+        setIncomingHelpRequest(helpRequestData);
+        setHelpRequestStatus({
+          helpRequestId: data.help_request_id,
+          status: "pending",
+          acceptorCount: 0,
+        });
+      }
+    };
+
+    navigator.serviceWorker?.addEventListener("message", handleSwMessage);
+    return () => {
+      navigator.serviceWorker?.removeEventListener("message", handleSwMessage);
+    };
+  }, [setIncomingHelpRequest, setHelpRequestStatus]);
+
+  // If the app was opened via notification click and URL has params
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("action") === "accept_help") {
+      const helpRequestData = {
+        helpRequestId: params.get("help_request_id"),
+        requesterName: params.get("requester_name"),
+        requesterLocation: {
+          type: "Point",
+          coordinates: [
+            parseFloat(params.get("requester_location_lng")) || 0,
+            parseFloat(params.get("requester_location_lat")) || 0,
+          ],
+        },
+        acceptorsCount: 0,
+      };
+
+      setIncomingHelpRequest(helpRequestData);
+      setHelpRequestStatus({
+        helpRequestId: params.get("help_request_id"),
+        status: "pending",
+        acceptorCount: 0,
+      });
+
+      // Clean up URL state
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, [setIncomingHelpRequest, setHelpRequestStatus]);
+
+  // 1. Continuous Location Tracking
+  useEffect(() => {
+    if (!user?._id || !socket) return;
+
+    const updateLocation = () => {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition((position) => {
+          socket.emit("update-location-user", {
+            userId: user._id,
+            location: {
+              lat: position.coords.latitude,
+              lng: position.coords.longitude,
+            },
+          });
+        });
+      }
+    };
+
+    const locationInterval = setInterval(updateLocation, 10000);
+    updateLocation(); // Update immediately on mount
+
+    return () => clearInterval(locationInterval);
+  }, [user?._id, socket]);
+
   // --- Helpers ---
   const getAuthHeaders = () => ({
     Authorization: `Bearer ${localStorage.getItem("userToken")}`,
@@ -455,19 +610,17 @@ const UserHome = () => {
         )}
       </div>
 
-      <button
-        onClick={handleEmergencyRide}
-        className="absolute top-[2%] right-5 z-5 bg-[#e6f11a] text-black h-11 w-11 rounded-full shadow-2xl flex items-center justify-center animate-pulse border-2 border-black active:scale-90 transition-all cursor-pointer"
-      >
-        <div className="flex flex-col items-center">
-          <i className="ri-alarm-warning-fill text-lg"></i>
-          <span className="text-[8px] font-bold uppercase">SOS</span>
-        </div>
-      </button>
+      {/* Help Button and Modal */}
+      <HelpButton onClick={() => setHelpModalOpen(true)} />
+      <HelpRequestModal
+        isOpen={helpModalOpen}
+        onClose={() => setHelpModalOpen(false)}
+        user={user}
+      />
 
       <button
         onClick={handleEmergencyRide}
-        className="absolute top-[2%] right-5 z-5 bg-[#e6f11a] text-black h-11 w-11 rounded-full shadow-2xl flex items-center justify-center animate-pulse border-2 border-black active:scale-90 transition-all cursor-pointer"
+        className="absolute top-[10%] right-5 z-5 bg-[#e6f11a] text-black h-11 w-11 rounded-full shadow-2xl flex items-center justify-center cursor-pointer animate-pulse  active:scale-90 transition-all"
       >
         <div className="flex flex-col items-center">
           <i className="ri-alarm-warning-fill text-lg"></i>
@@ -566,6 +719,25 @@ const UserHome = () => {
             activeField={activeField}
           />
         </div>
+
+        {incomingHelpRequest && (
+          <HelpAcceptancePanel
+            helpRequest={incomingHelpRequest}
+            onAccept={() => acceptHelpRequest(incomingHelpRequest, socket)}
+            onDecline={() => declineHelpRequest()}
+            isLoading={false}
+          />
+        )}
+        {helpRequestStatus?.status === "in-progress" && (
+          <HelpInProgressPanel
+            helpRequest={incomingHelpRequest || activeHelpRequest}
+            isUserView={true}
+            onCancel={() => {
+              setIncomingHelpRequest(null);
+              setHelpRequestStatus(null);
+            }}
+          />
+        )}
       </div>
 
       {[

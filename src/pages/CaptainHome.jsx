@@ -40,7 +40,7 @@ const CaptainHome = () => {
           socket.emit("update-location-captain", {
             userId: captain._id,
             location: {
-              ltd: position.coords.latitude,
+              lat: position.coords.latitude,
               lng: position.coords.longitude,
             },
             activeRideId: null,
@@ -63,7 +63,6 @@ const CaptainHome = () => {
   }, [captain, socket]);
 
   useEffect(() => {
-    
     socket.on("new-ride", (data) => {
       setRide(data);
       setRidePopupPanel(true);
@@ -71,7 +70,7 @@ const CaptainHome = () => {
 
     socket.on("ride-cancelled", (data) => {
       setRidePopupPanel(false);
-      setConfirmRidePopupPanel(false); 
+      setConfirmRidePopupPanel(false);
       setRide(null);
     });
 
@@ -80,8 +79,6 @@ const CaptainHome = () => {
       socket.off("ride-cancelled");
     };
   }, [socket]);
-
-
 
   async function confirmRide() {
     try {
@@ -147,19 +144,17 @@ const CaptainHome = () => {
 
   return (
     <div className="h-screen overflow-hidden relative">
-      <div className=" absolute p-6 top-0 flex items-center justify-between w-full z-10">
-        <img
-          className="w-28  bg-white rounded-4xl shadow-md"
-          src="/logo.png"
-          alt="Ola Logo"
-        />
-        <Link
-          to="/captain-logout"
-          className="h-10 w-10 bg-white flex items-center justify-center rounded-full shadow-md"
-        >
-          <i className="text-xl  font-medium ri-logout-box-r-line"></i>
-        </Link>
-      </div>
+      <img
+        className="absolute top-6 left-6 z-10 w-28 bg-white rounded-4xl shadow-md"
+        src="/logo.png"
+        alt="Ola Logo"
+      />
+      <Link
+        to="/captain-logout"
+        className="absolute top-24 left-6 z-10 h-10 w-10 bg-white flex items-center justify-center rounded-full shadow-md"
+      >
+        <i className="text-xl font-medium ri-logout-box-r-line"></i>
+      </Link>
 
       <div className="h-[55%] relative z-0">
         <LiveTracking />
