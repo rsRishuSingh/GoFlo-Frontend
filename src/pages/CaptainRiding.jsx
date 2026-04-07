@@ -7,6 +7,7 @@ import LiveRouteTracking from "../components/LiveRouteTracking";
 import FinishRide from "../components/FinishRide";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
+import { useAlert } from "../components/AlertModal";
 
 const CaptainRiding = () => {
   const [finishRidePanel, setFinishRidePanel] = useState(false);
@@ -15,6 +16,7 @@ const CaptainRiding = () => {
   const navigate = useNavigate();
   const { socket } = useContext(SocketContext);
   const { captain } = useContext(CaptainDataContext);
+  const { alertInfo } = useAlert();
 
   const [rideData, setRideData] = useState(() => {
     if (location.state?.ride) {
@@ -43,7 +45,7 @@ const CaptainRiding = () => {
         );
         if (res.data.status === "cancelled") {
           navigate("/captain-home");
-          alert("User cancelled the ride.");
+          alertInfo("User cancelled the ride.", "Ride Cancelled");
         }
       } catch (err) {
         console.error("Polling error", err);

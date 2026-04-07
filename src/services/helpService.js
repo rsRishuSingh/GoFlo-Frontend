@@ -5,7 +5,7 @@ const api = axios.create({ baseURL: API_BASE_URL });
 
 // Add token to requests
 api.interceptors.request.use(config => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('userToken') || localStorage.getItem('captainToken');
     if (token) {
         config.headers.Authorization = `Bearer ${token}`;
     }
@@ -14,34 +14,11 @@ api.interceptors.request.use(config => {
 
 const helpService = {
     /**
-     * Send a help request to nearby medics
+     * Send a help request to nearby medics (includes optional description)
      */
-    sendHelpRequest: async (location) => {
+    sendHelpRequest: async (location, description) => {
         try {
-            const response = await api.post('/help/send-request', { location });
-            return response.data;
-        } catch (error) {
-            throw error.response?.data || error;
-        }
-    },
-
-   
-    acceptHelpRequest: async (helpRequestId, currentLocation) => {
-        try {
-            const response = await api.post('/help/accept', {
-                helpRequestId,
-                location: currentLocation
-            });
-            return response.data;
-        } catch (error) {
-            throw error.response?.data || error;
-        }
-    },
-
-  
-    cancelHelpAcceptance: async (helpRequestId) => {
-        try {
-            const response = await api.post('/help/cancel-acceptance', { helpRequestId });
+            const response = await api.post('/help/send-request', { location, description: description || '' });
             return response.data;
         } catch (error) {
             throw error.response?.data || error;
@@ -49,19 +26,7 @@ const helpService = {
     },
 
     /**
-     * Mark medic as arrived
-     */
-    markMedicArrived: async (helpRequestId) => {
-        try {
-            const response = await api.post('/help/mark-arrived', { helpRequestId });
-            return response.data;
-        } catch (error) {
-            throw error.response?.data || error;
-        }
-    },
-
-    /**
-     * Complete a help request
+     * Complete a help request (requester only)
      */
     completeHelpRequest: async (helpRequestId) => {
         try {
@@ -73,14 +38,11 @@ const helpService = {
     },
 
     /**
-     * Cancel a help request (User)
+     * Cancel a help request (requester only — REST fallback)
      */
     cancelHelpRequest: async (helpRequestId, reason) => {
         try {
-            const response = await api.post('/help/cancel-request', {
-                helpRequestId,
-                reason
-            });
+            const response = await api.post('/help/cancel-request', { helpRequestId, reason });
             return response.data;
         } catch (error) {
             throw error.response?.data || error;
@@ -88,7 +50,7 @@ const helpService = {
     },
 
     /**
-     * Get help request status
+     * Get help request status (used for UI recovery on reload)
      */
     getHelpRequestStatus: async (helpRequestId) => {
         try {

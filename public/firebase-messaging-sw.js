@@ -80,8 +80,7 @@ self.addEventListener('notificationclick', (event) => {
                         requester_location_lat: event.notification.data?.requester_location_lat || '',
                         requester_location_lng: event.notification.data?.requester_location_lng || ''
                     });
-                    return clie
-                    nts.openWindow(`/?${params.toString()}`);
+                    return clients.openWindow(`/?${params.toString()}`);
                 }
             })
         );

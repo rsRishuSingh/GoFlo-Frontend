@@ -1,12 +1,14 @@
 import React, { useState, useEffect, useContext } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import { SocketContext } from "../context/SocketContext"; // 1. Import Socket Context
+import { SocketContext } from "../context/SocketContext";
+import { useAlert } from "../components/AlertModal";
 
 const ConfirmRidePopUp = (props) => {
   const [otp, setOtp] = useState("");
   const navigate = useNavigate();
-  const { socket } = useContext(SocketContext); // 2. Get socket instance
+  const { socket } = useContext(SocketContext);
+  const { alertInfo, alertError, alertWarning } = useAlert();
   const isEmergency = props.ride?.isEmergency;
 
   // --- REAL-TIME CANCELLATION LISTENER ---
@@ -15,7 +17,7 @@ const ConfirmRidePopUp = (props) => {
       // Check if the cancelled ride matches the current ride context
       // (Optional check depending on how specific your backend payload is)
 
-      alert("The user has cancelled this ride.");
+      alertInfo("The user has cancelled this ride.", "Ride Cancelled");
 
       // Close panels and return to map
       props.setConfirmRidePopupPanel(false);
@@ -68,12 +70,12 @@ const ConfirmRidePopUp = (props) => {
           message.includes("status") ||
           message.includes("cancelled")
         ) {
-          alert("Ride cancelled by user or invalid.");
+          alertWarning("Ride cancelled by user or invalid.", "Ride Unavailable");
           props.setConfirmRidePopupPanel(false);
           props.setRidePopupPanel(false);
           navigate("/captain-home");
         } else {
-          alert("Invalid OTP");
+          alertError("Invalid OTP. Please ask the user for the correct code.", "Invalid OTP");
         }
       }
     }
@@ -98,7 +100,7 @@ const ConfirmRidePopUp = (props) => {
       }
     } catch (error) {
       console.error("Error cancelling ride:", error);
-      alert("Could not cancel the ride.");
+      alertError("Could not cancel the ride. Please try again.", "Cancel Failed");
     }
   };
 

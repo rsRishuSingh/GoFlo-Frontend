@@ -30,9 +30,10 @@ if (isFirebaseConfigured) {
     console.warn('Firebase configuration is incomplete. Please add Firebase credentials to .env file.');
 }
 
-const getAuthHeaders = () => ({
-    Authorization: `Bearer ${localStorage.getItem('userToken')}`,
-});
+const getAuthHeaders = () => {
+    const token = localStorage.getItem('userToken') || localStorage.getItem('captainToken');
+    return { Authorization: `Bearer ${token}` };
+};
 
 /**
  * Initialize Firebase Cloud Messaging
@@ -121,13 +122,14 @@ export const listenToMessages = (onMessageReceived) => {
             const { title, body } = payload.notification;
             const data = payload.data || {};
 
-            const notification = {
-                title,
-                body,
-                data,
-            };
+            const notification = { title, body, data };
 
-            // Call the callback with notification data
+            // Case 2: App OPEN — trigger local OS notification
+            if (Notification.permission === 'granted') {
+                new Notification(title, { body, data });
+            }
+
+            // Also update UI via callback (adds to chat, etc.)
             if (onMessageReceived) {
                 onMessageReceived(notification);
             }

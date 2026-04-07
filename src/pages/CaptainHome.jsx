@@ -9,6 +9,7 @@ import { SocketContext } from "../context/SocketContext";
 import { CaptainDataContext } from "../context/CaptainContext";
 import axios from "axios";
 import LiveTracking from "../components/LiveTracking";
+import { useAlert } from "../components/AlertModal";
 
 const CaptainHome = () => {
   const [ridePopupPanel, setRidePopupPanel] = useState(false);
@@ -21,6 +22,7 @@ const CaptainHome = () => {
   const { socket } = useContext(SocketContext);
   const { captain } = useContext(CaptainDataContext);
   const navigate = useNavigate();
+  const { alertError, alertWarning } = useAlert();
 
   useEffect(() => {
     if (!captain?._id) return;
@@ -36,16 +38,20 @@ const CaptainHome = () => {
 
     const updateLocation = () => {
       if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition((position) => {
-          socket.emit("update-location-captain", {
-            userId: captain._id,
-            location: {
-              lat: position.coords.latitude,
-              lng: position.coords.longitude,
-            },
-            activeRideId: null,
-          });
-        });
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            socket.emit("update-location-captain", {
+              userId: captain._id,
+              location: {
+                lat: position.coords.latitude,
+                lng: position.coords.longitude,
+              },
+              activeRideId: null,
+            });
+          },
+          (err) => console.warn("Captain location error:", err.message),
+          { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 },
+        );
       }
     };
 
@@ -101,7 +107,7 @@ const CaptainHome = () => {
 
       const message =
         error.response?.data?.message || "Ride is no longer available.";
-      alert(message);
+      alertWarning(message, "Ride Unavailable");
 
       setRidePopupPanel(false);
       setConfirmRidePopupPanel(false);

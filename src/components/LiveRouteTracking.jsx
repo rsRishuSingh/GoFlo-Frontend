@@ -57,10 +57,14 @@ const LiveRouteTracking = ({
     if (isCaptain) {
       const updateGPS = () => {
         if (navigator.geolocation) {
-          navigator.geolocation.getCurrentPosition((pos) => {
-            const { latitude, longitude } = pos.coords;
-            setCurrentPosition({ lat: latitude, lng: longitude });
-          });
+          navigator.geolocation.getCurrentPosition(
+            (pos) => {
+              const { latitude, longitude } = pos.coords;
+              setCurrentPosition({ lat: latitude, lng: longitude });
+            },
+            (err) => console.warn("GPS error:", err.message),
+            { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 },
+          );
         }
       };
       updateGPS();

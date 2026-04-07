@@ -21,12 +21,13 @@ import HelpInProgressPanel from "../components/HelpInProgressPanel";
 // Context
 import { SocketContext } from "../context/SocketContext";
 import { UserDataContext } from "../context/UserContext";
+import { useAlert } from "../components/AlertModal";
 
 // Firebase Service
 import { initFCM, listenToMessages } from "../services/firebaseService";
 
 const UserHome = () => {
-  // --- State Management ---
+  // --- State ---
   const [pickup, setPickup] = useState("");
   const [destination, setDestination] = useState("");
   const [pickupSuggestions, setPickupSuggestions] = useState([]);
@@ -63,132 +64,132 @@ const UserHome = () => {
     incomingHelpRequest,
     setIncomingHelpRequest,
     activeHelpRequest,
+    setActiveHelpRequest,
     helpRequestStatus,
     setHelpRequestStatus,
+    isHelpRequester,
+    setIsHelpRequester,
+    medicCurrentLocation,
     acceptHelpRequest,
     declineHelpRequest,
+    cancelHelpRequest,
+    completeHelpRequest,
+    clearHelpState,
+    setupHelpSocketListeners,
+    cleanupHelpSocketListeners,
+    seenHelpRequestIds,
   } = useContext(UserDataContext);
+  const { alertError, alertWarning, alertInfo } = useAlert();
 
   // --- Side Effects ---
 
-  // 0. Initialize Firebase Cloud Messaging
+  // 0. Firebase Cloud Messaging
   useEffect(() => {
+    if (!user?._id) return;
     const initializeFirebase = async () => {
       try {
         const token = await initFCM("user");
-        if (token) {
-          console.log("Firebase initialized with token:", token);
-        }
+        if (token) console.log("Firebase initialized with token:", token);
       } catch (error) {
         console.error("Error initializing Firebase:", error);
       }
     };
-
-    if (user?._id) {
-      initializeFirebase();
-    }
+    initializeFirebase();
   }, [user?._id]);
 
-  // Listen for incoming help notifications
+  // 1. FCM foreground messages → show acceptance panel
   useEffect(() => {
     listenToMessages((notification) => {
-      console.log("Help notification received:", notification);
+      if (notification?.data?.action !== "open_help_request") return;
 
-      if (notification?.data?.action === "open_help_request") {
-        const helpRequestData = {
-          helpRequestId: notification.data.help_request_id,
-          requesterName: notification.data.requester_name,
-          requesterLocation: {
-            type: "Point",
-            coordinates: [
-              parseFloat(notification.data.requester_location_lng),
-              parseFloat(notification.data.requester_location_lat),
-            ],
-          },
-          acceptorsCount: 0,
-        };
+      const helpRequestId = notification.data.help_request_id;
+      if (!helpRequestId) return;
 
-        setIncomingHelpRequest(helpRequestData);
-        setHelpRequestStatus({
-          helpRequestId: notification.data.help_request_id,
-          status: "pending",
-          acceptorCount: 0,
-        });
-      }
+      // Deduplication: don't show same request twice
+      if (seenHelpRequestIds?.current?.has(helpRequestId)) return;
+
+      setIncomingHelpRequest({
+        helpRequestId,
+        requesterId: notification.data.requester_id || null,
+        requesterName: notification.data.requester_name,
+        description: notification.data.description || "",
+        requesterLocation: {
+          lat: parseFloat(notification.data.requester_location_lat),
+          lng: parseFloat(notification.data.requester_location_lng),
+          coordinates: [
+            parseFloat(notification.data.requester_location_lng),
+            parseFloat(notification.data.requester_location_lat),
+          ],
+        },
+      });
     });
-  }, [setIncomingHelpRequest, setHelpRequestStatus]);
+  }, [setIncomingHelpRequest, seenHelpRequestIds]);
 
-  // Listen for service-worker push click messages (if app was opened by notification click)
+  // 2. Service-worker push-click messages (app was opened by notification click)
   useEffect(() => {
     const handleSwMessage = (event) => {
       if (!event?.data) return;
-
       const { action, data } = event.data;
-      if (action === "accept_help" || action === "open_help_request") {
-        const helpRequestData = {
-          helpRequestId: data.help_request_id,
-          requesterName: data.requester_name,
-          requesterLocation: {
-            type: "Point",
-            coordinates: [
-              parseFloat(data.requester_location_lng),
-              parseFloat(data.requester_location_lat),
-            ],
-          },
-          acceptorsCount: 0,
-        };
+      if (action !== "accept_help" && action !== "open_help_request") return;
 
-        setIncomingHelpRequest(helpRequestData);
-        setHelpRequestStatus({
-          helpRequestId: data.help_request_id,
-          status: "pending",
-          acceptorCount: 0,
-        });
-      }
+      const helpRequestId = data.help_request_id;
+      if (!helpRequestId) return;
+      if (seenHelpRequestIds?.current?.has(helpRequestId)) return;
+
+      setIncomingHelpRequest({
+        helpRequestId,
+        requesterId: data.requester_id || null,
+        requesterName: data.requester_name,
+        description: data.description || "",
+        requesterLocation: {
+          lat: parseFloat(data.requester_location_lat),
+          lng: parseFloat(data.requester_location_lng),
+          coordinates: [
+            parseFloat(data.requester_location_lng),
+            parseFloat(data.requester_location_lat),
+          ],
+        },
+      });
     };
 
     navigator.serviceWorker?.addEventListener("message", handleSwMessage);
-    return () => {
-      navigator.serviceWorker?.removeEventListener("message", handleSwMessage);
-    };
-  }, [setIncomingHelpRequest, setHelpRequestStatus]);
+    return () => navigator.serviceWorker?.removeEventListener("message", handleSwMessage);
+  }, [setIncomingHelpRequest, seenHelpRequestIds]);
 
-  // If the app was opened via notification click and URL has params
+  // 3. URL params (app opened from notification click when previously closed)
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    if (params.get("action") === "accept_help") {
-      const helpRequestData = {
-        helpRequestId: params.get("help_request_id"),
-        requesterName: params.get("requester_name"),
-        requesterLocation: {
-          type: "Point",
-          coordinates: [
-            parseFloat(params.get("requester_location_lng")) || 0,
-            parseFloat(params.get("requester_location_lat")) || 0,
-          ],
-        },
-        acceptorsCount: 0,
-      };
+    if (params.get("action") !== "accept_help") return;
 
-      setIncomingHelpRequest(helpRequestData);
-      setHelpRequestStatus({
-        helpRequestId: params.get("help_request_id"),
-        status: "pending",
-        acceptorCount: 0,
-      });
+    const helpRequestId = params.get("help_request_id");
+    if (!helpRequestId) return;
+    if (seenHelpRequestIds?.current?.has(helpRequestId)) return;
 
-      // Clean up URL state
-      window.history.replaceState({}, document.title, window.location.pathname);
-    }
-  }, [setIncomingHelpRequest, setHelpRequestStatus]);
+    setIncomingHelpRequest({
+      helpRequestId,
+      requesterId: params.get("requester_id") || null,
+      requesterName: params.get("requester_name"),
+      description: params.get("description") || "",
+      requesterLocation: {
+        lat: parseFloat(params.get("requester_location_lat")) || 0,
+        lng: parseFloat(params.get("requester_location_lng")) || 0,
+        coordinates: [
+          parseFloat(params.get("requester_location_lng")) || 0,
+          parseFloat(params.get("requester_location_lat")) || 0,
+        ],
+      },
+    });
 
-  // 1. Continuous Location Tracking
+    window.history.replaceState({}, document.title, window.location.pathname);
+  }, [setIncomingHelpRequest, seenHelpRequestIds]);
+
+  // 4. Continuous location tracking
   useEffect(() => {
     if (!user?._id || !socket) return;
 
     const updateLocation = () => {
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition((position) => {
+      navigator.geolocation?.getCurrentPosition(
+        (position) => {
           socket.emit("update-location-user", {
             userId: user._id,
             location: {
@@ -196,13 +197,14 @@ const UserHome = () => {
               lng: position.coords.longitude,
             },
           });
-        });
-      }
+        },
+        (err) => console.warn("Location update error:", err.message),
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 },
+      );
     };
 
     const locationInterval = setInterval(updateLocation, 10000);
-    updateLocation(); // Update immediately on mount
-
+    updateLocation();
     return () => clearInterval(locationInterval);
   }, [user?._id, socket]);
 
@@ -211,48 +213,25 @@ const UserHome = () => {
     Authorization: `Bearer ${localStorage.getItem("userToken")}`,
   });
 
-  const getCurrentPosition = () => {
-    return new Promise((resolve, reject) => {
-      if (!navigator.geolocation) {
-        reject(new Error("Geolocation is not supported"));
-      } else {
-        navigator.geolocation.getCurrentPosition(resolve, reject);
-      }
+  const getCurrentPosition = () =>
+    new Promise((resolve, reject) => {
+      if (!navigator.geolocation) reject(new Error("Geolocation not supported"));
+      else
+        navigator.geolocation.getCurrentPosition(resolve, reject, {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 0,
+        });
     });
-  };
 
-  // --- API Handlers ---
-
-  // Cancel Ride Handler
-  const cancelRide = async () => {
-    if (!ride?._id) return;
-    try {
-      const response = await axios.post(
-        `${import.meta.env.VITE_BASE_URL}/rides/cancel`,
-        { rideId: ride._id },
-        { headers: getAuthHeaders() },
-      );
-      // Reset States
-      setVehicleFound(false);
-      setWaitingForDriver(false);
-      setRide(null);
-      setPanelOpen(false);
-      console.log(response.data);
-    } catch (error) {
-      console.error("Error cancelling ride:", error);
-      alert("Failed to cancel ride");
-      navigate("/user-login");
-    }
-  };
-
-  // --- Side Effects ---
-
-  // 1. Socket Connection & Events
+  // --- Socket setup ---
   useEffect(() => {
-    if (!user?._id) return;
+    if (!user?._id || !socket) return;
 
     socket.emit("join", { userType: "user", userId: user._id });
     console.log("User joined socket room:", user._id);
+
+    setupHelpSocketListeners(socket, user._id);
 
     const handleRideConfirmed = (rideData) => {
       setVehicleFound(false);
@@ -263,7 +242,6 @@ const UserHome = () => {
 
     const handleRideStarted = (rideData) => {
       setWaitingForDriver(false);
-      // Clear inputs before navigating
       setPickup("");
       setDestination("");
       navigate("/user-riding", { state: { ride: rideData } });
@@ -275,93 +253,158 @@ const UserHome = () => {
     return () => {
       socket.off("ride-confirmed", handleRideConfirmed);
       socket.off("ride-started", handleRideStarted);
+      cleanupHelpSocketListeners(socket);
     };
-  }, [user, socket, navigate]);
+  }, [user?._id, socket, navigate, setupHelpSocketListeners, cleanupHelpSocketListeners]);
 
-  // 2. JOIN RIDE ROOM
+  // JOIN RIDE ROOM
   useEffect(() => {
     if (waitingForDriver && ride?._id) {
       socket.emit("join-ride", { rideId: ride._id });
     }
   }, [waitingForDriver, ride, socket]);
 
-  // 3. POLLING: Waiting for Driver (Live Location & Status)
+  // POLLING: Waiting for Driver
   useEffect(() => {
-    if (waitingForDriver && ride?._id) {
-      const fetchRideStatus = async () => {
-        try {
-          const response = await axios.get(
-            `${import.meta.env.VITE_BASE_URL}/rides/users/${ride._id}`,
-            { headers: getAuthHeaders() },
-          );
+    if (!waitingForDriver || !ride?._id) return;
 
-          if (response.data.status === "ongoing") {
-            setWaitingForDriver(false);
-            setPickup("");
-            setDestination("");
-            navigate("/user-riding", { state: { ride: response.data } });
-            return;
-          }
+    const fetchRideStatus = async () => {
+      try {
+        const response = await axios.get(
+          `${import.meta.env.VITE_BASE_URL}/rides/users/${ride._id}`,
+          { headers: getAuthHeaders() },
+        );
 
-          if (response.data.status === "cancelled") {
-            setWaitingForDriver(false);
-            setVehicleFound(false);
-            setRide(null);
-
-            if (response.data.cancellationReason !== "User cancelled") {
-              alert("Your ride was cancelled by the captain.");
-            }
-            return;
-          }
-
-          setRide(response.data);
-        } catch (err) {
-          console.error("Error polling ride status:", err);
+        if (response.data.status === "ongoing") {
+          setWaitingForDriver(false);
+          setPickup("");
+          setDestination("");
+          navigate("/user-riding", { state: { ride: response.data } });
+          return;
         }
-      };
 
-      const interval = setInterval(fetchRideStatus, 4000);
-      fetchRideStatus();
+        if (response.data.status === "cancelled") {
+          setWaitingForDriver(false);
+          setVehicleFound(false);
+          setRide(null);
+          if (response.data.cancellationReason !== "User cancelled") {
+            alertWarning("Your ride was cancelled by the captain.", "Ride Cancelled");
+          }
+          return;
+        }
 
-      return () => clearInterval(interval);
-    }
+        setRide(response.data);
+      } catch (err) {
+        console.error("Error polling ride status:", err);
+      }
+    };
+
+    const interval = setInterval(fetchRideStatus, 4000);
+    fetchRideStatus();
+    return () => clearInterval(interval);
   }, [waitingForDriver, ride?._id, navigate]);
 
-  // 4. POLLING: Looking for Driver (Waiting for Accept)
+  // POLLING: Looking for Driver
   useEffect(() => {
-    if (vehicleFound && ride?._id) {
-      const checkAcceptance = async () => {
-        try {
-          const response = await axios.get(
-            `${import.meta.env.VITE_BASE_URL}/rides/users/${ride._id}`,
-            { headers: getAuthHeaders() },
-          );
+    if (!vehicleFound || !ride?._id) return;
 
-          if (response.data.status === "accepted") {
-            setVehicleFound(false);
-            setWaitingForDriver(true);
-            setRide(response.data);
+    const checkAcceptance = async () => {
+      try {
+        const response = await axios.get(
+          `${import.meta.env.VITE_BASE_URL}/rides/users/${ride._id}`,
+          { headers: getAuthHeaders() },
+        );
+
+        if (response.data.status === "accepted") {
+          setVehicleFound(false);
+          setWaitingForDriver(true);
+          setRide(response.data);
+        } else if (response.data.status === "cancelled") {
+          setVehicleFound(false);
+          setRide(null);
+          if (response.data.cancellationReason !== "User cancelled") {
+            alertWarning("Ride request cancelled by captain/system.", "Ride Cancelled");
           }
-
-          if (response.data.status === "cancelled") {
-            setVehicleFound(false);
-            setRide(null);
-
-            if (response.data.cancellationReason !== "User cancelled") {
-              alert("Ride request cancelled by captain/system.");
-            }
-          }
-        } catch (err) {
-          console.error("Error polling acceptance:", err);
         }
-      };
+      } catch (err) {
+        console.error("Error polling acceptance:", err);
+      }
+    };
 
-      const interval = setInterval(checkAcceptance, 4000);
-      return () => clearInterval(interval);
-    }
+    const interval = setInterval(checkAcceptance, 4000);
+    return () => clearInterval(interval);
   }, [vehicleFound, ride?._id]);
 
-  // --- Suggestions & Geocoding Handlers ---
+  // TIMEOUT: 3 minutes — standard ride looking for a captain
+  useEffect(() => {
+    if (!vehicleFound || !ride?._id || vehicleType === "ambulance") return;
+
+    const timer = setTimeout(async () => {
+      // Cancel the ride on the backend
+      try {
+        await axios.post(
+          `${import.meta.env.VITE_BASE_URL}/rides/cancel`,
+          { rideId: ride._id },
+          { headers: getAuthHeaders() },
+        );
+      } catch (err) {
+        console.error("[Timeout] Failed to cancel ride:", err);
+      }
+      setVehicleFound(false);
+      setWaitingForDriver(false);
+      setRide(null);
+      setPanelOpen(false);
+      alertWarning("No captain available nearby. Please try again.", "Captain Not Available");
+    }, 3 * 60 * 1000); // 3 minutes
+
+    return () => clearTimeout(timer);
+  }, [vehicleFound, ride?._id, vehicleType]);
+
+  // TIMEOUT: 3 minutes — emergency (SOS ambulance) looking for a captain
+  useEffect(() => {
+    if (!vehicleFound || !ride?._id || vehicleType !== "ambulance") return;
+
+    const timer = setTimeout(async () => {
+      try {
+        await axios.post(
+          `${import.meta.env.VITE_BASE_URL}/rides/cancel`,
+          { rideId: ride._id },
+          { headers: getAuthHeaders() },
+        );
+      } catch (err) {
+        console.error("[Timeout] Failed to cancel emergency ride:", err);
+      }
+      setVehicleFound(false);
+      setWaitingForDriver(false);
+      setRide(null);
+      setPanelOpen(false);
+      alertWarning("No ambulance captain available right now. Please call emergency services.", "Captain Not Available");
+    }, 3 * 60 * 1000); // 3 minutes
+
+    return () => clearTimeout(timer);
+  }, [vehicleFound, ride?._id, vehicleType]);
+
+  // TIMEOUT: 10 minutes — waiting for a medic to accept a help request
+  useEffect(() => {
+    // Only start when this user IS the requester AND request is in-progress with no acceptors yet
+    if (!isHelpRequester || !helpRequestStatus?.helpRequestId) return;
+    // If a medic already accepted (acceptorCount > 0), don't start/keep the timer
+    if ((helpRequestStatus.acceptorCount ?? 0) > 0) return;
+
+    const helpRequestId = helpRequestStatus.helpRequestId;
+
+    const timer = setTimeout(async () => {
+      // Cancel the help request
+      cancelHelpRequest(helpRequestId, socket, "Timeout — no medic accepted");
+      clearHelpState();
+      alertWarning("No medics accepted your request. Please call emergency services or try again.", "No Medics Available");
+      navigate("/");
+    }, 10 * 60 * 1000); // 10 minutes
+
+    return () => clearTimeout(timer);
+  }, [isHelpRequester, helpRequestStatus?.helpRequestId, helpRequestStatus?.acceptorCount]);
+
+  // --- Suggestions ---
   const fetchSuggestions = async (input) => {
     try {
       const response = await axios.get(
@@ -376,14 +419,12 @@ const UserHome = () => {
 
   const handlePickupChange = async (e) => {
     setPickup(e.target.value);
-    const suggestions = await fetchSuggestions(e.target.value);
-    setPickupSuggestions(suggestions);
+    setPickupSuggestions(await fetchSuggestions(e.target.value));
   };
 
   const handleDestinationChange = async (e) => {
     setDestination(e.target.value);
-    const suggestions = await fetchSuggestions(e.target.value);
-    setDestinationSuggestions(suggestions);
+    setDestinationSuggestions(await fetchSuggestions(e.target.value));
   };
 
   const findTrip = async () => {
@@ -399,17 +440,8 @@ const UserHome = () => {
         }),
       ]);
 
-      const originData = {
-        location_name: pickup,
-        ltd: pickupRes.data.ltd,
-        lng: pickupRes.data.lng,
-      };
-
-      const destinationData = {
-        location_name: destination,
-        ltd: destRes.data.ltd,
-        lng: destRes.data.lng,
-      };
+      const originData = { location_name: pickup, ltd: pickupRes.data.ltd, lng: pickupRes.data.lng };
+      const destinationData = { location_name: destination, ltd: destRes.data.ltd, lng: destRes.data.lng };
 
       setRideCoordinates({ origin: originData, destination: destinationData });
 
@@ -425,45 +457,53 @@ const UserHome = () => {
     } catch (error) {
       console.error("Error finding trip:", error);
       if (error.response) {
-        alert(error.response.data.message || "Error calculating fare");
+        alertError(error.response.data.message || "Error calculating fare", "Could Not Get Fare");
         navigate("/user-login");
       }
     }
   };
 
   const createRide = async () => {
-    if (!rideCoordinates) {
-      return alert("Invalid ride data. Please search again.");
-    }
-
+    if (!rideCoordinates) { alertError("Invalid ride data. Please search again.", "Invalid Data"); return; }
     try {
       const response = await axios.post(
         `${import.meta.env.VITE_BASE_URL}/rides/create`,
-        {
-          origin: rideCoordinates.origin,
-          destination: rideCoordinates.destination,
-          vehicleType,
-        },
+        { origin: rideCoordinates.origin, destination: rideCoordinates.destination, vehicleType },
         { headers: getAuthHeaders() },
       );
-
       setRide(response.data);
       setVehicleFound(true);
       setConfirmRidePanel(false);
     } catch (error) {
       console.error("Error creating ride:", error);
-      alert("Error creating ride. Please try again.");
+      alertError("Error creating ride. Please try again.", "Ride Error");
       navigate("/user-riding");
+    }
+  };
+
+  const cancelRide = async () => {
+    if (!ride?._id) return;
+    try {
+      await axios.post(
+        `${import.meta.env.VITE_BASE_URL}/rides/cancel`,
+        { rideId: ride._id },
+        { headers: getAuthHeaders() },
+      );
+      setVehicleFound(false);
+      setWaitingForDriver(false);
+      setRide(null);
+      setPanelOpen(false);
+    } catch (error) {
+      console.error("Error cancelling ride:", error);
+      alertError("Failed to cancel ride", "Cancel Failed");
+      navigate("/user-login");
     }
   };
 
   const getAddressFromCoordinates = async (ltd, lng) => {
     const addressResponse = await axios.get(
       `${import.meta.env.VITE_BASE_URL}/maps/get-address`,
-      {
-        params: { ltd, lng },
-        headers: getAuthHeaders(),
-      },
+      { params: { ltd, lng }, headers: getAuthHeaders() },
     );
     return addressResponse.data.address;
   };
@@ -476,7 +516,7 @@ const UserHome = () => {
       setPickup(address);
     } catch (error) {
       console.error("Error setting current location:", error);
-      alert("Unable to fetch your location");
+      alertError("Unable to fetch your location. Please enable GPS.", "Location Error");
       navigate("/user-login");
     }
   };
@@ -487,27 +527,15 @@ const UserHome = () => {
       const { latitude, longitude } = position.coords;
       const hospitalResponse = await axios.get(
         `${import.meta.env.VITE_BASE_URL}/maps/get-nearest-hospital`,
-        {
-          params: { ltd: latitude, lng: longitude },
-          headers: getAuthHeaders(),
-        },
+        { params: { ltd: latitude, lng: longitude }, headers: getAuthHeaders() },
       );
       const hospital = hospitalResponse.data;
-      const location_name = await getAddressFromCoordinates(
-        latitude,
-        longitude,
-      );
-
+      const location_name = await getAddressFromCoordinates(latitude, longitude);
       const originData = { location_name, ltd: latitude, lng: longitude };
 
       const rideResponse = await axios.post(
         `${import.meta.env.VITE_BASE_URL}/rides/create`,
-        {
-          origin: originData,
-          destination: hospital,
-          vehicleType: "ambulance",
-          isEmergency: true,
-        },
+        { origin: originData, destination: hospital, vehicleType: "ambulance", isEmergency: true },
         { headers: getAuthHeaders() },
       );
 
@@ -516,7 +544,6 @@ const UserHome = () => {
         setDestination(hospital.location_name);
         setVehicleType("ambulance");
         setFare({ ambulance: rideResponse.data.fare });
-
         setRide(rideResponse.data);
         setVehicleFound(true);
         setPanelOpen(false);
@@ -524,7 +551,7 @@ const UserHome = () => {
       }
     } catch (error) {
       console.error("SOS Error:", error);
-      alert("Failed to initiate emergency ride.");
+      alertError("Failed to initiate emergency ride.", "SOS Error");
       navigate("/user-login");
     }
   };
@@ -543,64 +570,96 @@ const UserHome = () => {
   }, [panelOpen]);
 
   const slidePanel = (ref, isOpen) => {
-    gsap.to(ref.current, {
-      y: isOpen ? "0%" : "100%",
-      duration: 0.3,
-      ease: "power3.out",
-    });
+    gsap.to(ref.current, { y: isOpen ? "0%" : "100%", duration: 0.3, ease: "power3.out" });
   };
 
   useGSAP(() => slidePanel(vehiclePanelRef, vehiclePanel), [vehiclePanel]);
-  useGSAP(
-    () => slidePanel(confirmRidePanelRef, confirmRidePanel),
-    [confirmRidePanel],
-  );
+  useGSAP(() => slidePanel(confirmRidePanelRef, confirmRidePanel), [confirmRidePanel]);
   useGSAP(() => slidePanel(vehicleFoundRef, vehicleFound), [vehicleFound]);
-  useGSAP(
-    () => slidePanel(waitingForDriverRef, waitingForDriver),
-    [waitingForDriver],
-  );
+  useGSAP(() => slidePanel(waitingForDriverRef, waitingForDriver), [waitingForDriver]);
 
+  // --- Map decision ---
   const captainLocation = ride?.captain?.location?.coordinates
-    ? {
-        lat: ride.captain.location.coordinates[1],
-        lng: ride.captain.location.coordinates[0],
-      }
+    ? { lat: ride.captain.location.coordinates[1], lng: ride.captain.location.coordinates[0] }
     : null;
 
-  const mapDestination = useMemo(() => {
-    if (ride && ride.origin) {
-      return {
-        lat: ride.origin.ltd,
-        lng: ride.origin.lng,
-      };
-    }
+  const rideMapDestination = useMemo(() => {
+    if (ride?.origin) return { lat: ride.origin.ltd, lng: ride.origin.lng };
     return null;
   }, [ride?.origin?.ltd, ride?.origin?.lng]);
 
+  // HELP FLOW MAP: Requester sees nearest medic's location; Medic sees requester's location
+  const helpIsActive = helpRequestStatus?.status === "in-progress";
+
+  const helpMedicDestination = useMemo(() => {
+    // Medic navigates TO the requester
+    if (!helpIsActive || isHelpRequester || !activeHelpRequest?.requesterLocation) return null;
+    const loc = activeHelpRequest.requesterLocation;
+    return {
+      lat: loc.lat ?? loc.coordinates?.[1],
+      lng: loc.lng ?? loc.coordinates?.[0],
+    };
+  }, [helpIsActive, isHelpRequester, activeHelpRequest?.requesterLocation]);
+
+  const helpRequesterMedicPosition = useMemo(() => {
+    // Requester sees the nearest medic's live location (updated via socket)
+    if (!helpIsActive || !isHelpRequester || !medicCurrentLocation) return null;
+    return medicCurrentLocation;
+  }, [helpIsActive, isHelpRequester, medicCurrentLocation]);
+
   const isFindTripDisabled = pickup.length < 3 || destination.length < 3;
+
+  // Pre-check requester status before accepting
+  const handleAcceptWithCheck = async () => {
+    try {
+      const res = await fetch(
+        `${import.meta.env.VITE_BASE_URL}/help/request/${incomingHelpRequest.helpRequestId}`,
+        { headers: { Authorization: `Bearer ${localStorage.getItem("userToken")}` } },
+      );
+      const json = await res.json();
+      const status = json?.data?.status ?? json?.status;
+      if (status && status !== "pending") {
+        setIncomingHelpRequest(null);
+        alertWarning(`This request is no longer available (${status}).`, "Request Unavailable");
+        return;
+      }
+    } catch {
+      // Proceed anyway — backend will reject via help:error if stale
+    }
+    acceptHelpRequest(incomingHelpRequest, socket);
+  };
 
   return (
     <div className="h-screen relative w-full overflow-hidden">
       <div className="absolute left-5 top-5 z-10">
-        <img
-          className="w-28  bg-white rounded-4xl  shadow-md my-2"
-          src="/logo.png"
-          alt="Ola Logo"
-        />
+        <img className="w-28 bg-white rounded-4xl shadow-md my-2" src="/logo.png" alt="Logo" />
         <Link
           to="/user-logout"
           className="h-10 w-10 mt-5 bg-white flex items-center justify-center rounded-full shadow-md"
         >
-          <i className="text-xl font-medium ri-logout-box-line"></i>
+          <i className="text-xl font-medium ri-logout-box-line" />
         </Link>
       </div>
 
+      {/* MAP — priority: help(medic nav) > help(requester nav) > ride > default */}
       <div className="h-[70%] w-full z-0">
-        {/* CONDITIONALLY RENDER MAPS */}
-        {waitingForDriver && ride && mapDestination ? (
+        {helpIsActive && !isHelpRequester && helpMedicDestination ? (
+          // MEDIC: navigate to requester's location
           <LiveRouteTracking
-            destination={mapDestination}
+            destination={helpMedicDestination}
+            isCaptain={true}
+          />
+        ) : helpIsActive && isHelpRequester && helpRequesterMedicPosition ? (
+          // REQUESTER: show nearest medic's live position as destination
+          <LiveRouteTracking
+            destination={helpRequesterMedicPosition}
+            isCaptain={false}
+            captainLocation={helpRequesterMedicPosition}
+          />
+        ) : waitingForDriver && ride && rideMapDestination ? (
+          // Ride in progress
+          <LiveRouteTracking
+            destination={rideMapDestination}
             isCaptain={false}
             rideId={ride._id}
             captainLocation={captainLocation}
@@ -616,14 +675,36 @@ const UserHome = () => {
         isOpen={helpModalOpen}
         onClose={() => setHelpModalOpen(false)}
         user={user}
+        socket={socket}
+        onSuccess={(data) => {
+          setIsHelpRequester(true);
+          if (data?.helpRequestId) {
+            setHelpRequestStatus({
+              status: "in-progress",
+              helpRequestId: data.helpRequestId,
+              acceptorCount: 0,
+            });
+            setActiveHelpRequest({
+              helpRequestId: data.helpRequestId,
+              requesterId: user?._id,
+              requesterName: `${user?.fullname?.firstname} ${user?.fullname?.lastname || ""}`.trim(),
+              requesterLocation: data.location
+                ? { lat: data.location.lat, lng: data.location.lng, coordinates: [data.location.lng, data.location.lat] }
+                : null,
+              acceptors: [],
+              description: "",
+            });
+          }
+        }}
       />
 
+      {/* SOS Emergency Ride */}
       <button
         onClick={handleEmergencyRide}
-        className="absolute top-[10%] right-5 z-5 bg-[#e6f11a] text-black h-11 w-11 rounded-full shadow-2xl flex items-center justify-center cursor-pointer animate-pulse  active:scale-90 transition-all"
+        className="absolute top-[10%] right-5 z-5 bg-[#e6f11a] text-black h-11 w-11 rounded-full shadow-2xl flex items-center justify-center cursor-pointer animate-pulse active:scale-90 transition-all"
       >
         <div className="flex flex-col items-center">
-          <i className="ri-alarm-warning-fill text-lg"></i>
+          <i className="ri-alarm-warning-fill text-lg" />
           <span className="text-[8px] font-bold uppercase">SOS</span>
         </div>
       </button>
@@ -632,39 +713,34 @@ const UserHome = () => {
         onClick={handleUseCurrentLocation}
         className="absolute bottom-[37%] right-5 z-5 h-10 w-10 bg-white rounded-full flex items-center justify-center shadow-lg hover:bg-gray-100 transition-colors"
       >
-        <i className="ri-crosshair-2-line text-2xl "></i>
+        <i className="ri-crosshair-2-line text-2xl" />
       </button>
 
+      {/* Bottom panel */}
       <div
         ref={panelWrapperRef}
         className="flex flex-col h-[35%] absolute bottom-0 w-full z-10 bg-white"
       >
-        <div className="p-6 bg-white rounded-t-3xl  relative">
+        <div className="p-6 bg-white rounded-t-3xl relative">
           <h5
             ref={panelCloseRef}
             onClick={() => setPanelOpen(false)}
             className="absolute opacity-0 right-6 top-6 text-2xl cursor-pointer z-10"
           >
-            <i className="ri-arrow-down-wide-line"></i>
+            <i className="ri-arrow-down-wide-line" />
           </h5>
 
           <h3 className="my-2 relative font-bold">
-            <span className="text-2xl ">
+            <span className="text-2xl">
               Hi{" "}
               {user?.fullname?.firstname
-                ? user.fullname.firstname.charAt(0).toUpperCase() +
-                  user.fullname.firstname.slice(1)
+                ? user.fullname.firstname.charAt(0).toUpperCase() + user.fullname.firstname.slice(1)
                 : "There"}
               ,{" "}
             </span>
-            <span className="text-2xl ">
+            <span className="text-2xl">
               Book a Ride{" "}
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                fill="rgba(170,234,54,1)"
-                className="w-7 h-7 inline "
-              >
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="rgba(170,234,54,1)" className="w-7 h-7 inline">
                 <path d="M2 5L9 2L15 5L21.303 2.2987C21.5569 2.18992 21.8508 2.30749 21.9596 2.56131C21.9862 2.62355 22 2.69056 22 2.75827V19L15 22L9 19L2.69696 21.7013C2.44314 21.8101 2.14921 21.6925 2.04043 21.4387C2.01375 21.3765 2 21.3094 2 21.2417V5Z" />
               </svg>
             </span>
@@ -673,20 +749,14 @@ const UserHome = () => {
           <form className="relative py-3" onSubmit={(e) => e.preventDefault()}>
             <div className="absolute h-18 w-1 top-1/2 -translate-y-1/2 left-5 bg-gray-800 rounded-full" />
             <input
-              onClick={() => {
-                setPanelOpen(true);
-                setActiveField("pickup");
-              }}
+              onClick={() => { setPanelOpen(true); setActiveField("pickup"); }}
               value={pickup}
               onChange={handlePickupChange}
               className="bg-gray-100 px-12 py-2 text-base rounded-lg w-full"
               placeholder="Add a pick-up location"
             />
             <input
-              onClick={() => {
-                setPanelOpen(true);
-                setActiveField("destination");
-              }}
+              onClick={() => { setPanelOpen(true); setActiveField("destination"); }}
               value={destination}
               onChange={handleDestinationChange}
               className="bg-gray-100 px-12 py-2 text-base rounded-lg w-full my-4"
@@ -707,11 +777,7 @@ const UserHome = () => {
         </div>
         <div ref={panelRef} className="bg-white h-0 overflow-hidden">
           <LocationSearchPanel
-            suggestions={
-              activeField === "pickup"
-                ? pickupSuggestions
-                : destinationSuggestions
-            }
+            suggestions={activeField === "pickup" ? pickupSuggestions : destinationSuggestions}
             setPanelOpen={setPanelOpen}
             setVehiclePanel={setVehiclePanel}
             setPickup={setPickup}
@@ -719,81 +785,68 @@ const UserHome = () => {
             activeField={activeField}
           />
         </div>
-
-        {incomingHelpRequest && (
-          <HelpAcceptancePanel
-            helpRequest={incomingHelpRequest}
-            onAccept={() => acceptHelpRequest(incomingHelpRequest, socket)}
-            onDecline={() => declineHelpRequest()}
-            isLoading={false}
-          />
-        )}
-        {helpRequestStatus?.status === "in-progress" && (
-          <HelpInProgressPanel
-            helpRequest={incomingHelpRequest || activeHelpRequest}
-            isUserView={true}
-            onCancel={() => {
-              setIncomingHelpRequest(null);
-              setHelpRequestStatus(null);
-            }}
-          />
-        )}
       </div>
 
+      {/* Help panels — fixed overlays above everything */}
+      {incomingHelpRequest && (
+        <HelpAcceptancePanel
+          key={incomingHelpRequest.helpRequestId}
+          helpRequest={incomingHelpRequest}
+          onAccept={handleAcceptWithCheck}
+          onDecline={() =>
+            declineHelpRequest(incomingHelpRequest.helpRequestId, socket)
+          }
+          isLoading={helpRequestStatus?.status === "accepting"}
+        />
+      )}
+
+      {helpRequestStatus?.status === "in-progress" && (
+        <HelpInProgressPanel
+          key={helpRequestStatus.helpRequestId}
+          helpRequest={incomingHelpRequest || activeHelpRequest}
+          isUserView={isHelpRequester}
+          acceptorCountProp={helpRequestStatus.acceptorCount}
+          nearestETAProp={helpRequestStatus.nearestETA ?? helpRequestStatus.eta}
+          medicArrivedProp={helpRequestStatus.medicArrived}
+          helpRequestId={helpRequestStatus.helpRequestId}
+          socket={socket}
+          userId={user?._id}
+          onComplete={() => {
+            const helpRequestId = helpRequestStatus.helpRequestId;
+            if (!helpRequestId || !socket) return;
+            if (isHelpRequester) {
+              completeHelpRequest(helpRequestId, socket);
+            } else {
+              // Medic marks arrived → notify backend, then return to home screen
+              socket.emit("help:medic-arrived", { medicId: user._id, helpRequestId });
+              clearHelpState();
+            }
+          }}
+          onCancel={() => {
+            const helpRequestId = helpRequestStatus.helpRequestId;
+            if (helpRequestId && socket) {
+              if (!isHelpRequester) {
+                // Medic cancels their acceptance
+                socket.emit("help:cancel-accepted", { medicId: user._id, helpRequestId });
+              } else {
+                // Requester cancels the whole request
+                cancelHelpRequest(helpRequestId, socket, "User cancelled");
+              }
+            }
+            clearHelpState();
+          }}
+        />
+      )}
+
+      {/* Slide-up panels (vehicle, confirm, looking, waiting) */}
       {[
-        [
-          vehiclePanelRef,
-          <VehiclePanel
-            selectVehicle={setVehicleType}
-            fare={fare}
-            setConfirmRidePanel={setConfirmRidePanel}
-            setVehiclePanel={setVehiclePanel}
-          />,
-        ],
-        [
-          confirmRidePanelRef,
-          <ConfirmRide
-            createRide={createRide}
-            pickup={pickup}
-            destination={destination}
-            fare={fare}
-            vehicleType={vehicleType}
-            setConfirmRidePanel={setConfirmRidePanel}
-            setVehicleFound={setVehicleFound}
-          />,
-        ],
-        [
-          vehicleFoundRef,
-          <LookingForDriver
-            pickup={pickup}
-            destination={destination}
-            fare={fare}
-            vehicleType={vehicleType}
-            setVehicleFound={setVehicleFound}
-            // PASS CANCEL FUNCTION
-            cancelRide={cancelRide}
-          />,
-        ],
-        [
-          waitingForDriverRef,
-          <WaitingForDriver
-            ride={ride}
-            setVehicleFound={setVehicleFound}
-            setWaitingForDriver={setWaitingForDriver}
-            waitingForDriver={waitingForDriver}
-            // PASS CANCEL FUNCTION
-            cancelRide={cancelRide}
-          />,
-        ],
+        [vehiclePanelRef, <VehiclePanel selectVehicle={setVehicleType} fare={fare} setConfirmRidePanel={setConfirmRidePanel} setVehiclePanel={setVehiclePanel} />],
+        [confirmRidePanelRef, <ConfirmRide createRide={createRide} pickup={pickup} destination={destination} fare={fare} vehicleType={vehicleType} setConfirmRidePanel={setConfirmRidePanel} setVehicleFound={setVehicleFound} />],
+        [vehicleFoundRef, <LookingForDriver pickup={pickup} destination={destination} fare={fare} vehicleType={vehicleType} setVehicleFound={setVehicleFound} cancelRide={cancelRide} />],
+        [waitingForDriverRef, <WaitingForDriver ride={ride} setVehicleFound={setVehicleFound} setWaitingForDriver={setWaitingForDriver} waitingForDriver={waitingForDriver} cancelRide={cancelRide} />],
       ].map(([ref, Component], idx) => (
-        <div
-          key={idx}
-          className="fixed inset-x-0 bottom-0 z-20 flex justify-center pointer-events-none"
-        >
-          <div
-            ref={ref}
-            className="pointer-events-auto w-full max-w-md translate-y-full bg-white px-3 py-6 pt-12 rounded-t-3xl shadow-2xl"
-          >
+        <div key={idx} className="fixed inset-x-0 bottom-0 z-20 flex justify-center pointer-events-none">
+          <div ref={ref} className="pointer-events-auto w-full max-w-md translate-y-full bg-white px-3 py-6 pt-12 rounded-t-3xl shadow-2xl">
             {Component}
           </div>
         </div>

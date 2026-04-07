@@ -1,6 +1,7 @@
 import React from "react";
 import { Route, Routes } from "react-router-dom";
 import { LoadScript } from "@react-google-maps/api";
+import { AlertProvider } from "./components/AlertModal";
 import Start from "./pages/Start";
 import UserHome from "./pages/UserHome";
 import CaptainHome from "./pages/CaptainHome";
@@ -20,6 +21,7 @@ const libraries = ["places", "marker"];
 
 const App = () => {
   return (
+    <AlertProvider>
     <LoadScript
       googleMapsApiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY}
       libraries={libraries} // 👈 Add this line
@@ -68,6 +70,7 @@ const App = () => {
         </Routes>
       </div>
     </LoadScript>
+    </AlertProvider>
   );
 };
 

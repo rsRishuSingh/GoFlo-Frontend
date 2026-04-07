@@ -5,6 +5,7 @@ import LiveRouteTracking from "../components/LiveRouteTracking";
 import axios from "axios";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
+import { useAlert } from "../components/AlertModal";
 
 const UserRiding = () => {
   const [isPaymentPanelOpen, setIsPaymentPanelOpen] = useState(false);
@@ -13,6 +14,7 @@ const UserRiding = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { socket } = useContext(SocketContext);
+  const { alertError } = useAlert();
 
   // Vehicle Images Map
   const vehicleImages = {
@@ -83,9 +85,6 @@ const UserRiding = () => {
 
   // CANCEL RIDE FUNCTION
   const cancelRide = async () => {
-    if (!window.confirm("Are you sure you want to cancel this active ride?"))
-      return;
-
     try {
       await axios.post(
         `${import.meta.env.VITE_BASE_URL}/rides/cancel`,
@@ -100,7 +99,7 @@ const UserRiding = () => {
       navigate("/user-home");
     } catch (error) {
       console.error("Error cancelling ride:", error);
-      alert("Could not cancel ride");
+      alertError("Could not cancel ride. Please try again.", "Cancel Failed");
     }
   };
 
