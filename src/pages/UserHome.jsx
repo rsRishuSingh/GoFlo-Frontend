@@ -55,6 +55,8 @@ const UserHome = () => {
   const confirmRidePanelRef = useRef(null);
   const vehicleFoundRef = useRef(null);
   const waitingForDriverRef = useRef(null);
+  const helpAcceptancePanelRef = useRef(null);
+  const helpInProgressPanelRef = useRef(null);
 
   // --- Hooks ---
   const navigate = useNavigate();
@@ -577,6 +579,8 @@ const UserHome = () => {
   useGSAP(() => slidePanel(confirmRidePanelRef, confirmRidePanel), [confirmRidePanel]);
   useGSAP(() => slidePanel(vehicleFoundRef, vehicleFound), [vehicleFound]);
   useGSAP(() => slidePanel(waitingForDriverRef, waitingForDriver), [waitingForDriver]);
+  useGSAP(() => slidePanel(helpAcceptancePanelRef, !!incomingHelpRequest), [incomingHelpRequest]);
+  useGSAP(() => slidePanel(helpInProgressPanelRef, helpRequestStatus?.status === "in-progress"), [helpRequestStatus?.status]);
 
   // --- Map decision ---
   const captainLocation = ride?.captain?.location?.coordinates
@@ -787,56 +791,65 @@ const UserHome = () => {
         </div>
       </div>
 
-      {/* Help panels — fixed overlays above everything */}
-      {incomingHelpRequest && (
-        <HelpAcceptancePanel
-          key={incomingHelpRequest.helpRequestId}
-          helpRequest={incomingHelpRequest}
-          onAccept={handleAcceptWithCheck}
-          onDecline={() =>
-            declineHelpRequest(incomingHelpRequest.helpRequestId, socket)
-          }
-          isLoading={helpRequestStatus?.status === "accepting"}
-        />
-      )}
-
-      {helpRequestStatus?.status === "in-progress" && (
-        <HelpInProgressPanel
-          key={helpRequestStatus.helpRequestId}
-          helpRequest={incomingHelpRequest || activeHelpRequest}
-          isUserView={isHelpRequester}
-          acceptorCountProp={helpRequestStatus.acceptorCount}
-          nearestETAProp={helpRequestStatus.nearestETA ?? helpRequestStatus.eta}
-          medicArrivedProp={helpRequestStatus.medicArrived}
-          helpRequestId={helpRequestStatus.helpRequestId}
-          socket={socket}
-          userId={user?._id}
-          onComplete={() => {
-            const helpRequestId = helpRequestStatus.helpRequestId;
-            if (!helpRequestId || !socket) return;
-            if (isHelpRequester) {
-              completeHelpRequest(helpRequestId, socket);
-            } else {
-              // Medic marks arrived → notify backend, then return to home screen
-              socket.emit("help:medic-arrived", { medicId: user._id, helpRequestId });
-              clearHelpState();
-            }
-          }}
-          onCancel={() => {
-            const helpRequestId = helpRequestStatus.helpRequestId;
-            if (helpRequestId && socket) {
-              if (!isHelpRequester) {
-                // Medic cancels their acceptance
-                socket.emit("help:cancel-accepted", { medicId: user._id, helpRequestId });
-              } else {
-                // Requester cancels the whole request
-                cancelHelpRequest(helpRequestId, socket, "User cancelled");
+      {/* Help Acceptance Panel — slide-up from bottom */}
+      <div className="fixed inset-x-0 bottom-0 z-20 flex justify-center pointer-events-none">
+        <div ref={helpAcceptancePanelRef} className="pointer-events-auto w-full max-w-md translate-y-full bg-white px-3 py-6 pt-12 rounded-t-3xl shadow-2xl">
+          {incomingHelpRequest && (
+            <HelpAcceptancePanel
+              key={incomingHelpRequest.helpRequestId}
+              helpRequest={incomingHelpRequest}
+              onAccept={handleAcceptWithCheck}
+              onDecline={() =>
+                declineHelpRequest(incomingHelpRequest.helpRequestId, socket)
               }
-            }
-            clearHelpState();
-          }}
-        />
-      )}
+              isLoading={helpRequestStatus?.status === "accepting"}
+            />
+          )}
+        </div>
+      </div>
+
+      {/* Help In-Progress Panel — slide-up from bottom */}
+      <div className="fixed inset-x-0 bottom-0 z-20 flex justify-center pointer-events-none">
+        <div ref={helpInProgressPanelRef} className="pointer-events-auto w-full max-w-md translate-y-full bg-white px-3 py-6 pt-12 rounded-t-3xl shadow-2xl">
+          {helpRequestStatus?.status === "in-progress" && (
+            <HelpInProgressPanel
+              key={helpRequestStatus.helpRequestId}
+              helpRequest={incomingHelpRequest || activeHelpRequest}
+              isUserView={isHelpRequester}
+              acceptorCountProp={helpRequestStatus.acceptorCount}
+              nearestETAProp={helpRequestStatus.nearestETA ?? helpRequestStatus.eta}
+              medicArrivedProp={helpRequestStatus.medicArrived}
+              helpRequestId={helpRequestStatus.helpRequestId}
+              socket={socket}
+              userId={user?._id}
+              onComplete={() => {
+                const helpRequestId = helpRequestStatus.helpRequestId;
+                if (!helpRequestId || !socket) return;
+                if (isHelpRequester) {
+                  completeHelpRequest(helpRequestId, socket);
+                } else {
+                  // Medic marks arrived → notify backend, then return to home screen
+                  socket.emit("help:medic-arrived", { medicId: user._id, helpRequestId });
+                  clearHelpState();
+                }
+              }}
+              onCancel={() => {
+                const helpRequestId = helpRequestStatus.helpRequestId;
+                if (helpRequestId && socket) {
+                  if (!isHelpRequester) {
+                    // Medic cancels their acceptance
+                    socket.emit("help:cancel-accepted", { medicId: user._id, helpRequestId });
+                  } else {
+                    // Requester cancels the whole request
+                    cancelHelpRequest(helpRequestId, socket, "User cancelled");
+                  }
+                }
+                clearHelpState();
+              }}
+            />
+          )}
+        </div>
+      </div>
 
       {/* Slide-up panels (vehicle, confirm, looking, waiting) */}
       {[

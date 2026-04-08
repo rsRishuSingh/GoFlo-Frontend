@@ -4,14 +4,14 @@
 importScripts('https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/10.7.0/firebase-messaging-compat.js');
 
-// Firebase configuration
+// Firebase configuration — values must match your Netlify env vars
 const firebaseConfig = {
-    apiKey: "YOUR_API_KEY",
-    authDomain: "YOUR_AUTH_DOMAIN",
-    projectId: "YOUR_PROJECT_ID",
-    storageBucket: "YOUR_STORAGE_BUCKET",
-    messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-    appId: "YOUR_APP_ID"
+    apiKey: "AIzaSyDf9z8k_1OIQQfGbyIR5nnEdRz9sFamjUg",
+    authDomain: "ridehailing-521dd.firebaseapp.com",
+    projectId: "ridehailing-521dd",
+    storageBucket: "ridehailing-521dd.firebasestorage.app",
+    messagingSenderId: "266809832322",
+    appId: "1:266809832322:web:cc9178e95a9614b10cd59b"
 };
 
 // Initialize Firebase

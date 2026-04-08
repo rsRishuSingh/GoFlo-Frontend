@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { Check, X, Clock, AlertTriangle } from "lucide-react";
+import "remixicon/fonts/remixicon.css";
 
 // Client-side haversine distance (no API needed)
 function haversineKm(lat1, lng1, lat2, lng2) {
@@ -84,109 +85,121 @@ const HelpAcceptancePanel = ({
   const urgencyLevel =
     timeRemaining > 120 ? "low" : timeRemaining > 60 ? "medium" : "high";
 
-  // =========================================================================
-  // UI SECTION - REFINED TO MATCH NEW AESTHETIC
-  // =========================================================================
-
-  const headerStyles = {
-    low: "bg-[#3b82f6]",    // Blue
-    medium: "bg-[#f59e0b]", // Amber
-    high: "bg-[#ef4444]",   // Red
-  }[urgencyLevel];
-
   const hasDescription = helpRequest.description && helpRequest.description.trim() !== "";
 
-  return (
-    <div className="fixed bottom-4 right-4 sm:bottom-10 sm:right-10 w-[340px] max-w-[calc(100vw-2rem)] bg-white rounded-2xl shadow-[0_8px_30px_rgba(0,0,0,0.12)] overflow-hidden z-50">
+  // =========================================================================
+  // UI SECTION - REDESIGNED TO MATCH APP DESIGN LANGUAGE
+  // =========================================================================
 
-      {/* Header Banner */}
-      <div className={`${headerStyles} text-white px-4 py-4 flex items-center justify-between transition-colors duration-500`}>
-        <div className="flex items-center gap-2">
-          <div className="w-2.5 h-2.5 bg-white rounded-full animate-pulse shadow-[0_0_8px_rgba(255,255,255,0.6)]" />
-          <h3 className="font-bold text-[16px] tracking-wide">SOS Request</h3>
+  const timerBg = {
+    low: "bg-blue-50 text-blue-700 border-blue-200",
+    medium: "bg-amber-50 text-amber-700 border-amber-200",
+    high: "bg-red-50 text-red-600 border-red-200",
+  }[urgencyLevel];
+
+  return (
+    <div>
+
+      {/* Drag Handle */}
+      <h5 className="text-center w-[93%] absolute top-0">
+        <i className="text-5xl text-gray-400 ri-separator" />
+      </h5>
+
+      {/* Header */}
+      <div className="flex items-center justify-between mt-4 mb-4 px-2">
+        <div className="flex items-center gap-2.5">
+          {/* Pulsing red dot */}
+          <div className="relative flex items-center justify-center">
+            <span className="absolute inline-flex h-4 w-4 rounded-full bg-red-400 opacity-75 animate-ping" />
+            <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-red-500" />
+          </div>
+          <h3 className="text-xl font-bold text-gray-900">SOS Request</h3>
         </div>
-        <div className="flex items-center gap-1.5 bg-white/20 px-2.5 py-1 rounded-md backdrop-blur-sm">
+
+        {/* Timer */}
+        <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-sm font-bold tabular-nums ${timerBg}`}>
           <Clock className="w-3.5 h-3.5" />
-          <span className="text-[14px] font-bold tabular-nums tracking-wider">{formatTime(timeRemaining)}</span>
+          {formatTime(timeRemaining)}
         </div>
       </div>
 
-      <div className="p-5">
-
-        {/* Requester Info & Distance Box */}
-        <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded-xl px-4 py-3.5 mb-5 flex items-center justify-between shadow-sm">
+      {/* Patient Info Card */}
+      <div className="flex items-center justify-between bg-gray-50 rounded-xl px-4 py-3 shadow-sm border border-gray-100 mb-4">
+        <div className="flex items-center gap-3">
+          <div className="h-11 w-11 rounded-full bg-red-100 border-2 border-red-200 flex items-center justify-center flex-shrink-0">
+            <i className="ri-user-heart-line text-red-500 text-lg" />
+          </div>
           <div>
-            <p className="text-[11px] text-gray-400 uppercase tracking-widest font-bold mb-0.5">Patient Name</p>
-            <p className="text-[16px] font-bold text-[#1f2937] leading-none capitalize">{helpRequest.requesterName}</p>
+            <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Patient</p>
+            <h2 className="text-base font-bold capitalize text-gray-900 leading-tight">{helpRequest.requesterName}</h2>
           </div>
-          {distanceKm !== null && (
-            <div className="text-right">
-              <p className="text-[11px] text-gray-400 uppercase tracking-widest font-bold mb-0.5">Distance</p>
-              <p className="text-[16px] font-bold text-[#2563eb] leading-none">{formatDistance(distanceKm)}</p>
-            </div>
-          )}
         </div>
-
-        {/* Timeline: Location & Issue */}
-        <div className="px-1 mb-6">
-          {/* Location */}
-          <div className="flex items-start gap-3">
-            <div className="flex flex-col items-center mt-1.5">
-              <div className="w-2 h-2 bg-[#ef4444] rounded-full z-10" />
-              {hasDescription && (
-                <div className="w-[2px] h-[35px] border-l-2 border-dotted border-gray-300 my-1" />
-              )}
-            </div>
-            <div className="pb-1">
-              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">Patient Location</p>
-              <p className="text-[14px] font-bold text-gray-800 leading-tight">
-                {requesterLat !== null ? Number(requesterLat).toFixed(6) : "—"},{" "}
-                {requesterLng !== null ? Number(requesterLng).toFixed(6) : "—"}
-              </p>
-            </div>
-          </div>
-
-          {/* Description */}
-          {hasDescription && (
-            <div className="flex items-start gap-3 mt-1">
-              <div className="w-2 h-2 bg-[#f59e0b] rounded-full mt-1.5 z-10" />
-              <div className="w-full">
-                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">Reported Issue</p>
-                <p className="text-[13px] font-medium text-gray-700 bg-amber-50 px-2.5 py-1.5 rounded-md border border-amber-100/50 leading-snug">
-                  {helpRequest.description}
-                </p>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Urgency Warning */}
-        {urgencyLevel === "high" && (
-          <div className="bg-[#fef2f2] border border-[#fecaca] rounded-xl px-3 py-2.5 mb-4 text-[12px] text-[#dc2626] font-bold flex items-center justify-center gap-2 animate-pulse shadow-sm">
-            <AlertTriangle className="w-4 h-4" /> Decision needed immediately!
+        {distanceKm !== null && (
+          <div className="text-right">
+            <p className="text-[11px] text-gray-400 uppercase tracking-widest font-bold">Distance</p>
+            <p className="text-base font-bold text-red-600 leading-tight">{formatDistance(distanceKm)}</p>
           </div>
         )}
+      </div>
 
-        {/* Action Buttons */}
-        <div className="flex gap-3">
-          <button
-            onClick={() => onDecline?.()}
-            disabled={isLoading}
-            className="flex-1 bg-[#fff0f0] border border-[#fecaca] hover:bg-[#ffe4e4] text-[#dc2626] font-bold py-3.5 rounded-xl flex items-center justify-center gap-1.5 transition-colors text-[14px] disabled:opacity-50"
-          >
-            <X className="w-4 h-4 stroke-[3]" />
-            Ignore
-          </button>
-
-          <button
-            onClick={() => onAccept?.()}
-            disabled={isLoading}
-            className="flex-[1.2] bg-[#8add00] hover:bg-[#7bc400] text-white font-bold py-3.5 rounded-xl flex items-center justify-center gap-1.5 transition-colors text-[14px] shadow-sm disabled:opacity-50 disabled:bg-gray-300"
-          >
-            <Check className="w-4 h-4 stroke-[3]" />
-            {isLoading ? "Accepting..." : "Accept"}
-          </button>
+      {/* Timeline: Location & Issue */}
+      <div className="flex flex-col gap-y-3 px-2 mb-4">
+        {/* Location */}
+        <div className="flex items-start gap-4">
+          <div className="flex flex-col items-center mt-1 relative">
+            <div className="w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white shadow-sm z-10" />
+            {hasDescription && (
+              <div className="absolute top-4 w-0.5 h-9 border-l border-dashed border-gray-400" />
+            )}
+          </div>
+          <div className={`w-full ${hasDescription ? "border-b border-gray-100 pb-3" : ""}`}>
+            <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">Patient Location</p>
+            <p className="text-sm font-semibold text-gray-800 leading-snug font-mono">
+              {requesterLat !== null ? Number(requesterLat).toFixed(5) : "—"},&nbsp;
+              {requesterLng !== null ? Number(requesterLng).toFixed(5) : "—"}
+            </p>
+          </div>
         </div>
+
+        {/* Description */}
+        {hasDescription && (
+          <div className="flex items-start gap-4">
+            <div className="w-2.5 h-2.5 bg-amber-400 rounded-sm border-2 border-white shadow-sm mt-1 z-10" />
+            <div className="w-full">
+              <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">Reported Issue</p>
+              <p className="text-sm font-medium text-gray-700 leading-snug">{helpRequest.description}</p>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Urgency Warning */}
+      {urgencyLevel === "high" && (
+        <div className="bg-red-50 border border-red-200 rounded-xl px-3 py-2.5 mb-4 text-sm text-red-600 font-bold flex items-center gap-2 animate-pulse">
+          <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+          Decision needed immediately!
+        </div>
+      )}
+
+      {/* Action Buttons */}
+      <div className="flex flex-col gap-3 mt-2">
+        <button
+          onClick={() => onAccept?.()}
+          disabled={isLoading}
+          className="w-full bg-[#9aec00] text-gray-950 font-bold text-lg p-3.5 rounded-xl flex items-center justify-center gap-2 shadow-sm transition-all duration-200 hover:bg-[#7ec200] active:scale-95 disabled:opacity-50 disabled:bg-gray-300"
+        >
+          <Check className="w-5 h-5 stroke-[2.5]" />
+          {isLoading ? "Accepting..." : "Accept & Respond"}
+        </button>
+
+        <button
+          onClick={() => onDecline?.()}
+          disabled={isLoading}
+          className="w-full bg-white border border-gray-200 text-gray-500 font-semibold py-3 rounded-xl flex items-center justify-center gap-2 transition-all duration-200 hover:bg-gray-50 active:scale-95 disabled:opacity-50 text-sm"
+        >
+          <X className="w-4 h-4 stroke-[2]" />
+          Ignore
+        </button>
       </div>
     </div>
   );

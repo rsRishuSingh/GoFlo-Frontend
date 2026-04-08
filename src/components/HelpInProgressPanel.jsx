@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Navigation, Check, X, Clock } from "lucide-react";
+import "remixicon/fonts/remixicon.css";
 
 // Haversine distance in km
 function haversineKm(lat1, lng1, lat2, lng2) {
@@ -149,174 +150,211 @@ const HelpInProgressPanel = ({
     helpRequest.acceptors?.some((a) => a.status === "arrived");
 
   // =========================================================================
-  // UI SECTION - REFINED PROPORTIONS & TYPOGRAPHY
+  // UI SECTION - REDESIGNED TO MATCH APP DESIGN LANGUAGE
   // =========================================================================
 
-  // ── REQUESTER VIEW (Red Theme) ─────────────────────────────────────────────
+  // ── REQUESTER VIEW ──────────────────────────────────────────────────────────
   if (isUserView) {
     return (
-      <div className="fixed bottom-4 right-4 sm:bottom-10 sm:right-10 w-[340px] max-w-[calc(100vw-2rem)] bg-white rounded-2xl shadow-[0_8px_30px_rgba(0,0,0,0.12)] overflow-hidden z-50">
+      <div>
 
-        {/* Header - Sleeker padding and font size */}
-        <div className="bg-[#ef4444] px-4 py-4 text-white flex items-center justify-between">
-          <div>
-            <h3 className="font-bold text-[16px] flex items-center gap-1.5 tracking-wide">
-              <span className="text-[18px] leading-none">🚑</span> Help Request Active
-            </h3>
-            <p className="text-[12px] text-red-100 mt-0.5 font-medium">
-              {acceptorCount === 0
-                ? "Searching for nearby medics..."
-                : `${acceptorCount} medic${acceptorCount !== 1 ? "s" : ""} responding`}
-            </p>
+        {/* Drag Handle */}
+        <h5 className="text-center w-[93%] absolute top-0">
+          <i className="text-5xl text-gray-400 ri-separator" />
+        </h5>
+
+        {/* Header */}
+        <div className="flex items-center justify-between mt-4 mb-4 px-2">
+          <div className="flex items-center gap-2.5">
+            <div className="relative flex items-center justify-center">
+              <span className="absolute inline-flex h-4 w-4 rounded-full bg-red-400 opacity-75 animate-ping" />
+              <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-red-500" />
+            </div>
+            <div>
+              <h3 className="text-xl font-bold text-gray-900">Help Request Active</h3>
+              <p className="text-xs text-gray-400 font-medium mt-0.5">
+                {acceptorCount === 0
+                  ? "Searching for nearby medics..."
+                  : `${acceptorCount} medic${acceptorCount !== 1 ? "s" : ""} responding`}
+              </p>
+            </div>
           </div>
-          <Navigation className="w-4 h-4 opacity-90 rotate-45 mr-1" />
+
+          {/* Status badge */}
+          <span className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold border ${
+            hasArrived
+              ? "bg-green-50 text-green-700 border-green-200"
+              : acceptorCount === 0
+              ? "bg-red-50 text-red-600 border-red-200"
+              : "bg-amber-50 text-amber-700 border-amber-200"
+          }`}>
+            {hasArrived ? (
+              <><Check className="w-3 h-3 stroke-[3]" /> Arrived</>
+            ) : acceptorCount === 0 ? (
+              <>🔍 Searching</>
+            ) : (
+              <>🚑 En Route</>
+            )}
+          </span>
         </div>
 
-        <div className="p-4 space-y-4">
-          {/* Nearest Medic Box - Lighter background, softer border, proportional text */}
-          <div className="bg-[#fffdfd] border border-[#fee2e2] rounded-xl px-4 py-3.5 shadow-sm">
-            <div className="flex items-center gap-1.5 mb-1.5">
-              <Clock className="w-3.5 h-3.5 text-[#ef4444]" />
-              <p className="text-[11px] text-[#ef4444] uppercase tracking-wider font-bold">Nearest Medic</p>
-            </div>
+        {/* ETA Card */}
+        <div className="bg-gray-50 rounded-xl px-4 py-3.5 border border-gray-100 shadow-sm mb-4">
+          <div className="flex items-center gap-2 mb-1">
+            <Clock className="w-3.5 h-3.5 text-red-500" />
+            <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Nearest Medic ETA</p>
+          </div>
 
-            <p className="text-[26px] font-bold text-[#b91c1c] leading-tight mb-1 ml-5">
+          <div className="flex items-end justify-between">
+            <p className="text-3xl font-bold text-gray-900 leading-tight">
               {nearestETA !== null && nearestETA !== undefined ? formatETA(nearestETA) : "..."}
             </p>
-
-            {nearestETA === 0 ? (
-              <p className="text-[12px] text-[#16a34a] font-bold ml-5 flex items-center gap-1">
-                <Check className="w-3.5 h-3.5 stroke-[3]" /> Medic is right here!
-              </p>
-            ) : (
-              <p className="text-[12px] text-[#ef4444] font-medium ml-5 opacity-90">
-                Medic is on the way
-              </p>
-            )}
-          </div>
-
-          {/* Status Row - Adjusted pill size and spacing */}
-          <div className="flex items-center justify-between px-1">
-            <span className="text-[13px] text-gray-500 font-medium">Status</span>
-            <span
-              className={`px-2.5 py-1 rounded-md font-bold text-[11px] flex items-center gap-1.5 ${hasArrived
-                  ? "bg-[#dcfce7] text-[#166534]"
-                  : acceptorCount === 0
-                    ? "bg-[#fef2f2] text-[#ef4444]"
-                    : "bg-[#fff0f0] text-[#dc2626]"
-                }`}
-            >
-              {hasArrived ? (
-                <><Check className="w-3 h-3 stroke-[3]" /> Arrived</>
-              ) : acceptorCount === 0 ? (
-                <>🔍 Searching...</>
-              ) : (
-                <>🚗 En Route</>
-              )}
-            </span>
-          </div>
-
-          {/* Buttons - Tighter vertical rhythm */}
-          <div className="space-y-2 pt-1">
             {hasArrived && (
-              <button
-                onClick={() => onComplete?.()}
-                disabled={isLoading}
-                className="w-full bg-[#ef4444] hover:bg-[#dc2626] text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition-colors text-[14px] shadow-sm"
-              >
-                <Check className="w-4 h-4 stroke-[2.5]" />
-                Mark as Complete
-              </button>
+              <div className="flex items-center gap-1 text-green-600 font-bold text-sm">
+                <Check className="w-4 h-4 stroke-[3]" /> Medic is here!
+              </div>
             )}
-
-            <button
-              onClick={() => onCancel?.()}
-              disabled={isLoading}
-              className="w-full bg-white border border-[#fecaca] text-[#dc2626] font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition-colors hover:bg-[#fff0f0] text-[14px]"
-            >
-              <X className="w-4 h-4 stroke-[2.5]" />
-              Cancel Request
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // ── MEDIC VIEW (Red Theme - Scaled down to match User View proportions) ──────
-  return (
-    <div className="fixed bottom-4 right-4 sm:bottom-10 sm:right-10 w-[340px] max-w-[calc(100vw-2rem)] bg-white rounded-2xl shadow-[0_8px_30px_rgba(0,0,0,0.12)] overflow-hidden z-50">
-
-      {/* Banner */}
-      <div className="bg-[#fff0f0] text-[#991b1b] px-5 py-3.5 text-[13px] font-bold flex items-center gap-2">
-        <div className="w-2.5 h-2.5 bg-[#ef4444] rounded-full shadow-[0_0_8px_rgba(239,68,68,0.6)] animate-pulse"></div>
-        Ride in Progress - Sharing Live Location
-      </div>
-
-      <div className="p-5 space-y-5">
-
-        {/* ETA & Distance Box */}
-        {hasArrived ? (
-          <div className="bg-[#fff0f0] border border-[#fecaca] rounded-xl px-4 py-4 flex items-center gap-3">
-            <Check className="w-5 h-5 text-[#dc2626] stroke-[3]" />
-            <p className="text-[#991b1b] font-bold text-[14px]">You've arrived at the patient!</p>
-          </div>
-        ) : (
-          <div className="bg-[#fef2f2] border border-[#fecaca] rounded-xl px-4 py-3.5">
-            <div className="flex items-center gap-1.5 mb-1.5">
-              <div className="w-1.5 h-1.5 bg-[#dc2626] rounded-full"></div>
-              <p className="text-[#dc2626] font-bold text-[13px]">
-                Est. Time: {eta !== null && eta !== undefined ? formatETA(eta) : "Calculating..."}
-              </p>
-            </div>
-            <p className="text-[#dc2626] text-[12px] font-medium ml-3.5 mb-1 opacity-90">
-              Distance: {formatDistance(distanceKm) ?? "Calculating..."}
-            </p>
-            {eta === 0 && (
-              <p className="text-[#dc2626] text-[12px] font-bold ml-3.5">
-                You are very close!
-              </p>
+            {!hasArrived && nearestETA !== null && nearestETA === 0 && (
+              <div className="flex items-center gap-1 text-green-600 font-bold text-sm">
+                <Check className="w-4 h-4 stroke-[3]" /> Very close!
+              </div>
+            )}
+            {!hasArrived && nearestETA !== null && nearestETA > 0 && (
+              <p className="text-sm text-gray-400 font-medium">Medic on the way</p>
             )}
           </div>
-        )}
-
-        {/* Patient Location */}
-        <div className="px-1">
-          <div className="flex items-center gap-1.5 mb-1">
-            <div className="w-1.5 h-1.5 bg-[#ef4444] rounded-full"></div>
-            <h3 className="text-[10px] font-extrabold text-gray-400 uppercase tracking-widest">Patient Location</h3>
-          </div>
-          <p className="text-[14px] font-bold text-[#1f2937] ml-3">
-            {Number(helpRequest.requesterLocation?.lat ?? helpRequest.requesterLocation?.coordinates?.[1] ?? 0).toFixed(6)},{" "}
-            {Number(helpRequest.requesterLocation?.lng ?? helpRequest.requesterLocation?.coordinates?.[0] ?? 0).toFixed(6)}
-          </p>
         </div>
 
-        {/* Buttons */}
-        <div className="space-y-2 pt-1">
-          {!hasArrived && (
+        {/* Action Buttons */}
+        <div className="flex flex-col gap-3">
+          {hasArrived && (
             <button
               onClick={() => onComplete?.()}
-              disabled={isLoading || !isWithin200m}
-              className={`w-full font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition-colors text-[14px] shadow-sm ${isWithin200m
-                  ? "bg-[#ef4444] hover:bg-[#dc2626] text-white"
-                  : "bg-gray-100 text-gray-400 cursor-not-allowed"
-                }`}
+              disabled={isLoading}
+              className="w-full bg-[#9aec00] text-gray-950 font-bold text-lg py-3.5 rounded-xl flex items-center justify-center gap-2 shadow-sm hover:bg-[#7ec200] active:scale-95 transition-all duration-200 disabled:opacity-50"
             >
-              <Check className="w-4 h-4 stroke-[2.5]" />
-              {isLoading ? "Marking..." : isWithin200m ? "I've Arrived" : `Get within 200m to arrive`}
+              <Check className="w-5 h-5 stroke-[2.5]" />
+              Mark as Complete
             </button>
           )}
 
           <button
             onClick={() => onCancel?.()}
             disabled={isLoading}
-            className="w-full bg-white border border-[#fecaca] text-[#dc2626] font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition-colors hover:bg-[#fff0f0] text-[14px]"
+            className="w-full bg-white border border-gray-200 text-gray-500 font-semibold py-3 rounded-xl flex items-center justify-center gap-2 transition-all duration-200 hover:bg-gray-50 active:scale-95 text-sm"
           >
-            <X className="w-4 h-4 stroke-[2.5]" />
-            Cancel Acceptance
+            <X className="w-4 h-4 stroke-[2]" />
+            Cancel Request
           </button>
         </div>
+      </div>
+    );
+  }
+
+  // ── MEDIC VIEW ──────────────────────────────────────────────────────────────
+  return (
+    <div>
+
+      {/* Drag Handle */}
+      <h5 className="text-center w-[93%] absolute top-0">
+        <i className="text-5xl text-gray-400 ri-separator" />
+      </h5>
+
+      {/* Header */}
+      <div className="flex items-center justify-between mt-4 mb-4 px-2">
+        <div className="flex items-center gap-2.5">
+          <div className="relative flex items-center justify-center">
+            <span className="absolute inline-flex h-4 w-4 rounded-full bg-red-400 opacity-75 animate-ping" />
+            <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-red-500" />
+          </div>
+          <div>
+            <h3 className="text-xl font-bold text-gray-900">En Route to Patient</h3>
+            <p className="text-xs text-gray-400 font-medium mt-0.5">Sharing live location</p>
+          </div>
+        </div>
+
+        <span className="bg-red-50 border border-red-200 text-red-600 px-2.5 py-1 rounded-lg text-xs font-bold">
+          🚑 Active
+        </span>
+      </div>
+
+      {/* ETA / Arrived Card */}
+      {hasArrived ? (
+        <div className="bg-green-50 border border-green-200 rounded-xl px-4 py-3.5 flex items-center gap-3 mb-4 shadow-sm">
+          <div className="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
+            <Check className="w-5 h-5 text-green-600 stroke-[3]" />
+          </div>
+          <div>
+            <p className="font-bold text-green-800 text-base">You've arrived!</p>
+            <p className="text-xs text-green-600 mt-0.5">Patient location reached</p>
+          </div>
+        </div>
+      ) : (
+        <div className="bg-gray-50 border border-gray-100 rounded-xl px-4 py-3.5 mb-4 shadow-sm">
+          <div className="flex items-center gap-2 mb-2">
+            <Clock className="w-3.5 h-3.5 text-gray-400" />
+            <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">ETA to Patient</p>
+          </div>
+          <div className="flex items-center justify-between">
+            <p className="text-3xl font-bold text-gray-900 leading-tight">
+              {eta !== null && eta !== undefined ? formatETA(eta) : "Calculating..."}
+            </p>
+            {distanceKm !== null && (
+              <div className="text-right">
+                <p className="text-[11px] text-gray-400 uppercase font-bold">Distance</p>
+                <p className="text-base font-bold text-gray-700">{formatDistance(distanceKm)}</p>
+              </div>
+            )}
+          </div>
+          {eta === 0 && (
+            <p className="text-xs font-bold text-amber-600 mt-1">You are very close to the patient!</p>
+          )}
+        </div>
+      )}
+
+      {/* Patient Location */}
+      <div className="flex flex-col gap-y-1 px-2 mb-5">
+        <div className="flex items-start gap-4">
+          <div className="w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white shadow-sm mt-1 z-10 flex-shrink-0" />
+          <div className="w-full">
+            <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">Patient Location</p>
+            <p className="text-sm font-semibold text-gray-800 font-mono leading-snug">
+              {Number(helpRequest.requesterLocation?.lat ?? helpRequest.requesterLocation?.coordinates?.[1] ?? 0).toFixed(5)},&nbsp;
+              {Number(helpRequest.requesterLocation?.lng ?? helpRequest.requesterLocation?.coordinates?.[0] ?? 0).toFixed(5)}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Action Buttons */}
+      <div className="flex flex-col gap-3">
+        {!hasArrived && (
+          <button
+            onClick={() => onComplete?.()}
+            disabled={isLoading || !isWithin200m}
+            className={`w-full font-bold text-lg py-3.5 rounded-xl flex items-center justify-center gap-2 shadow-sm active:scale-95 transition-all duration-200 ${
+              isWithin200m
+                ? "bg-[#9aec00] text-gray-950 hover:bg-[#7ec200]"
+                : "bg-gray-100 text-gray-400 cursor-not-allowed"
+            }`}
+          >
+            <Check className="w-5 h-5 stroke-[2.5]" />
+            {isLoading
+              ? "Marking..."
+              : isWithin200m
+              ? "I've Arrived"
+              : `Get within 200m to arrive`}
+          </button>
+        )}
+
+        <button
+          onClick={() => onCancel?.()}
+          disabled={isLoading}
+          className="w-full bg-white border border-gray-200 text-gray-500 font-semibold py-3 rounded-xl flex items-center justify-center gap-2 transition-all duration-200 hover:bg-gray-50 active:scale-95 text-sm"
+        >
+          <X className="w-4 h-4 stroke-[2]" />
+          Cancel Acceptance
+        </button>
       </div>
     </div>
   );
