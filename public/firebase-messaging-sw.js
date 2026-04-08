@@ -55,36 +55,39 @@ self.addEventListener('notificationclick', (event) => {
 
     event.notification.close();
 
-    if (event.action === 'accept') {
-        // Open app with accept action
-        event.waitUntil(
-            clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
-                // Check if app is already open
-                for (let i = 0; i < clientList.length; i++) {
-                    const client = clientList[i];
-                    if (client.url.includes('/') && 'focus' in client) {
-                        // Post message to app with accept action
-                        client.postMessage({
-                            action: 'accept_help',
-                            data: event.notification.data
-                        });
-                        return client.focus();
-                    }
-                }
-                // If app not open, open it with query params so the page can parse request data
-                if (clients.openWindow) {
-                    const params = new URLSearchParams({
-                        action: 'accept_help',
-                        help_request_id: event.notification.data?.help_request_id || '',
-                        requester_name: event.notification.data?.requester_name || '',
-                        requester_location_lat: event.notification.data?.requester_location_lat || '',
-                        requester_location_lng: event.notification.data?.requester_location_lng || ''
-                    });
-                    return clients.openWindow(`/?${params.toString()}`);
-                }
-            })
-        );
+    // If user explicitly clicked the "Ignore" action button, just close it.
+    if (event.action === 'ignore') {
+        return;
     }
+
+    // For both "Accept" action and tapping the notification body, open the app
+    event.waitUntil(
+        clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+            // Check if app is already open
+            for (let i = 0; i < clientList.length; i++) {
+                const client = clientList[i];
+                if (client.url.includes('/') && 'focus' in client) {
+                    // Post message to app to open the help request
+                    client.postMessage({
+                        action: 'accept_help',
+                        data: event.notification.data
+                    });
+                    return client.focus();
+                }
+            }
+            // If app not open, open it with query params so the page can parse request data
+            if (clients.openWindow) {
+                const params = new URLSearchParams({
+                    action: 'accept_help',
+                    help_request_id: event.notification.data?.help_request_id || '',
+                    requester_name: event.notification.data?.requester_name || '',
+                    requester_location_lat: event.notification.data?.requester_location_lat || '',
+                    requester_location_lng: event.notification.data?.requester_location_lng || ''
+                });
+                return clients.openWindow(`/?${params.toString()}`);
+            }
+        })
+    );
 });
 
 // Handle notification close
