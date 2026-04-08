@@ -8,6 +8,7 @@ const UserSignup = () => {
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [isMedic, setIsMedic] = useState(false);
 
   const [errors, setErrors] = useState({
     firstName: "",
@@ -49,6 +50,7 @@ const UserSignup = () => {
       fullname: { firstname: firstName, lastname: lastName },
       email,
       password,
+      isMedic,
     };
 
     try {
@@ -152,6 +154,59 @@ const UserSignup = () => {
             {errors.password && (
               <p className="text-red-500 text-sm ">{errors.password}</p>
             )}
+          </div>
+
+
+          {/* Are you a medic? */}
+          <div className="mb-3">
+            <h3 className="text-base font-medium mb-2">Are you a medic?</h3>
+            <div className="flex gap-3">
+              <label
+                className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl border-2 cursor-pointer transition-all duration-150 font-medium text-sm ${
+                  isMedic === true
+                    ? "border-[#9aec00] bg-[#f4ffe0] text-gray-900"
+                    : "border-gray-200 bg-gray-50 text-gray-500"
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="isMedic"
+                  className="hidden"
+                  value="true"
+                  checked={isMedic === true}
+                  onChange={() => setIsMedic(true)}
+                />
+                <span className={`w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
+                  isMedic === true ? "border-[#7bc400]" : "border-gray-300"
+                }`}>
+                  {isMedic === true && <span className="w-2 h-2 rounded-full bg-[#7bc400]" />}
+                </span>
+                Yes, I'm a medic
+              </label>
+
+              <label
+                className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl border-2 cursor-pointer transition-all duration-150 font-medium text-sm ${
+                  isMedic === false
+                    ? "border-gray-800 bg-gray-900 text-white"
+                    : "border-gray-200 bg-gray-50 text-gray-500"
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="isMedic"
+                  className="hidden"
+                  value="false"
+                  checked={isMedic === false}
+                  onChange={() => setIsMedic(false)}
+                />
+                <span className={`w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
+                  isMedic === false ? "border-white" : "border-gray-300"
+                }`}>
+                  {isMedic === false && <span className="w-2 h-2 rounded-full bg-white" />}
+                </span>
+                No
+              </label>
+            </div>
           </div>
 
           <button
