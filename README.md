@@ -1,4 +1,4 @@
-# GOFlo App - Frontend
+# GoFlo App - Frontend
 
 Welcome to the frontend documentation for the Ride Hailing & Emergency Response application. This is a responsive, real-time web application built with **React** and **Vite**, designed to provide seamless ride-booking services for Passengers and Captains, while also offering critical emergency assistance through our integrated medic network.
 
