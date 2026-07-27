@@ -54,6 +54,23 @@ export const initFCM = async (userType = 'user') => {
                     scope: '/'
                 });
                 console.log('Service Worker registered:', registration);
+
+                // Send Firebase config to the service worker so it can initialize
+                // without needing hardcoded values in firebase-messaging-sw.js
+                if (registration.active) {
+                    registration.active.postMessage({
+                        type: 'FIREBASE_CONFIG',
+                        config: firebaseConfig
+                    });
+                } else {
+                    // Wait for the service worker to activate, then send config
+                    navigator.serviceWorker.ready.then((readyReg) => {
+                        readyReg.active.postMessage({
+                            type: 'FIREBASE_CONFIG',
+                            config: firebaseConfig
+                        });
+                    });
+                }
             } catch (error) {
                 console.error('Service Worker registration failed:', error);
             }

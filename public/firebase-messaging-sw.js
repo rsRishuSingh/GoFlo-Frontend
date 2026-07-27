@@ -1,52 +1,67 @@
 // Firebase Cloud Messaging Service Worker
 // Handles background notifications when app is not in focus
+// Config is injected dynamically from the main app — no hardcoded values needed.
 
 importScripts('https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/10.7.0/firebase-messaging-compat.js');
 
-// Firebase configuration — values must match your Netlify env vars
-const firebaseConfig = {
-    apiKey: "AIzaSyDf9z8k_1OIQQfGbyIR5nnEdRz9sFamjUg",
-    authDomain: "ridehailing-521dd.firebaseapp.com",
-    projectId: "ridehailing-521dd",
-    storageBucket: "ridehailing-521dd.firebasestorage.app",
-    messagingSenderId: "266809832322",
-    appId: "1:266809832322:web:cc9178e95a9614b10cd59b"
-};
+// Firebase will be initialized once we receive config from the main app
+let isFirebaseInitialized = false;
 
-// Initialize Firebase
-firebase.initializeApp(firebaseConfig);
+/**
+ * Initialize Firebase with config received from the main app.
+ * This avoids hardcoding credentials in the service worker.
+ */
+function initializeFirebase(config) {
+    if (isFirebaseInitialized) return;
 
-// Handle background notifications
-const messaging = firebase.messaging();
+    try {
+        firebase.initializeApp(config);
+        isFirebaseInitialized = true;
+        console.log('[firebase-messaging-sw.js] Firebase initialized with dynamic config');
 
-messaging.onBackgroundMessage((payload) => {
-    console.log('[firebase-messaging-sw.js] Received background message:', payload);
+        // Set up background message handler after initialization
+        const messaging = firebase.messaging();
 
-    const notificationTitle = payload.notification.title;
-    const notificationOptions = {
-        body: payload.notification.body,
-        icon: '/logo.png',
-        badge: '/favicon.ico',
-        data: payload.data,
-        tag: 'help-request',
-        requireInteraction: true, // Keep notification until user interacts
-        actions: [
-            {
-                action: 'accept',
-                title: 'Accept Help'
-            },
-            {
-                action: 'ignore',
-                title: 'Ignore'
-            }
-        ]
-    };
+        messaging.onBackgroundMessage((payload) => {
+            console.log('[firebase-messaging-sw.js] Received background message:', payload);
 
-    return self.registration.showNotification(
-        notificationTitle,
-        notificationOptions
-    );
+            const notificationTitle = payload.notification.title;
+            const notificationOptions = {
+                body: payload.notification.body,
+                icon: '/logo.png',
+                badge: '/favicon.ico',
+                data: payload.data,
+                tag: 'help-request',
+                requireInteraction: true, // Keep notification until user interacts
+                actions: [
+                    {
+                        action: 'accept',
+                        title: 'Accept Help'
+                    },
+                    {
+                        action: 'ignore',
+                        title: 'Ignore'
+                    }
+                ]
+            };
+
+            return self.registration.showNotification(
+                notificationTitle,
+                notificationOptions
+            );
+        });
+    } catch (error) {
+        console.error('[firebase-messaging-sw.js] Firebase initialization error:', error);
+    }
+}
+
+// Listen for config message from the main app
+self.addEventListener('message', (event) => {
+    if (event.data && event.data.type === 'FIREBASE_CONFIG') {
+        console.log('[firebase-messaging-sw.js] Received Firebase config from main app');
+        initializeFirebase(event.data.config);
+    }
 });
 
 // Handle notification click
